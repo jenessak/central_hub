@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graduation Data Merge Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f1b2d;--navy2:#162235;
+  --teal:#2dd4bf;--teal-dim:#1a9e8f;
+  --gold:#f4c842;--green:#4ade80;--red:#f87171;
+  --purple:#a78bfa;--orange:#fb923c;--pink:#f472b6;
+  --muted:#64748b;--border:rgba(255,255,255,0.07);
+  --card:rgba(255,255,255,0.04);--card2:rgba(255,255,255,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--navy);color:#e2e8f0;font-family:'Outfit',sans-serif;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(45,212,191,0.08),transparent 60%),radial-gradient(ellipse 50% 40% at 90% 90%,rgba(244,200,66,0.05),transparent 50%);pointer-events:none;z-index:0;}
+.wrap{max-width:1020px;margin:0 auto;padding:0 20px 100px;position:relative;z-index:1;}
+
+/* Header */
+header{padding:40px 0 24px;text-align:center;}
+.cap{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;color:var(--teal);text-transform:uppercase;margin-bottom:10px;}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(1.7rem,4vw,2.8rem);line-height:1.1;color:#f8fafc;}
+h1 em{font-style:italic;color:var(--gold);}
+.subtitle{margin-top:7px;color:var(--muted);font-size:13px;font-weight:300;}
+
+/* Mode cards */
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:26px 0 22px;}
+@media(max-width:680px){.modes{grid-template-columns:1fr 1fr;}}
+.mc{border:2px solid var(--border);border-radius:14px;padding:16px 12px;cursor:pointer;background:var(--card);transition:all .2s;text-align:center;position:relative;user-select:none;}
+.mc:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.mc.on    {border-color:var(--teal);  background:rgba(45,212,191,.07);}
+.mc.on.p2 {border-color:var(--purple);background:rgba(167,139,250,.07);}
+.mc.on.p3 {border-color:var(--orange);background:rgba(251,146,60,.07);}
+.mc.on.p4 {border-color:var(--pink);  background:rgba(244,114,182,.07);}
+.mc-icon{font-size:1.5rem;margin-bottom:5px;}
+.mc-title{font-size:11px;font-weight:600;color:#e2e8f0;margin-bottom:2px;line-height:1.3;}
+.mc-desc{font-size:10px;color:var(--muted);line-height:1.35;}
+.new-tag{position:absolute;top:7px;right:7px;font-size:9px;padding:1px 6px;border-radius:8px;background:rgba(244,114,182,.2);color:var(--pink);font-weight:700;font-family:'DM Mono',monospace;}
+
+/* Workflow */
+.wf{display:none;animation:fi .2s ease;}
+.wf.on{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* Upload */
+.urow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+@media(max-width:580px){.urow{grid-template-columns:1fr;}}
+.uz{border:2px dashed rgba(45,212,191,.28);border-radius:14px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card);position:relative;}
+.uz.upur{border-color:rgba(167,139,250,.28);}
+.uz.uora{border-color:rgba(251,146,60,.28);}
+.uz.upnk{border-color:rgba(244,114,182,.28);}
+.uz:hover,.uz.drag{border-color:var(--teal);background:rgba(45,212,191,.05);}
+.uz.upur:hover,.uz.upur.drag{border-color:var(--purple)!important;background:rgba(167,139,250,.05)!important;}
+.uz.uora:hover,.uz.uora.drag{border-color:var(--orange)!important;background:rgba(251,146,60,.05)!important;}
+.uz.upnk:hover,.uz.upnk.drag{border-color:var(--pink)!important;background:rgba(244,114,182,.05)!important;}
+.uz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.uz-icon{font-size:1.5rem;margin-bottom:6px;}
+.uz-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:5px;}
+.uz p{font-size:12px;color:var(--muted);}
+.uz strong{color:var(--teal);}
+.uz.upur strong{color:var(--purple);}
+.uz.uora strong{color:var(--orange);}
+.uz.upnk strong{color:var(--pink);}
+.lbadge{display:inline-block;margin-top:6px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;}
+.lbt{background:rgba(45,212,191,.15);color:var(--teal);}
+.lbp{background:rgba(167,139,250,.15);color:var(--purple);}
+.lbo{background:rgba(251,146,60,.15);color:var(--orange);}
+.lbpk{background:rgba(244,114,182,.15);color:var(--pink);}
+
+/* Info panels */
+.info-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 18px;display:flex;flex-direction:column;justify-content:center;}
+.info-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;}
+.info-list{display:flex;flex-direction:column;gap:5px;font-size:11px;color:#94a3b8;}
+
+/* Paste box */
+.paste-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;}
+.paste-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:5px;}
+.paste-desc{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.5;}
+.fta{width:100%;min-height:76px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:#e2e8f0;font-family:'DM Mono',monospace;font-size:11px;padding:9px 12px;outline:none;resize:vertical;transition:border-color .15s;}
+.fta:focus{border-color:var(--purple);}
+.pb-btn{margin-top:8px;padding:7px 16px;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:opacity .15s;}
+.pb-btn:hover{opacity:.85;}
+.bg-pur{background:var(--purple);color:var(--navy);}
+.bg-pnk{background:var(--pink);color:var(--navy);}
+
+/* Stats */
+.sbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px;text-align:center;}
+.stat .val{font-family:'DM Serif Display',serif;font-size:1.65rem;color:var(--teal);}
+.stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:1px;}
+.sw .val{color:var(--gold);} .se .val{color:var(--red);} .sg .val{color:var(--green);}
+
+/* Tabs */
+.tabs{display:flex;gap:3px;margin-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.tab{padding:7px 12px;font-size:11px;font-weight:500;cursor:pointer;color:var(--muted);border-radius:7px 7px 0 0;transition:all .15s;font-family:'DM Mono',monospace;letter-spacing:.04em;border:1px solid transparent;border-bottom:none;white-space:nowrap;}
+.tab:hover{color:#e2e8f0;}
+.tab.on{color:var(--teal);background:var(--card);border-color:var(--border);border-bottom-color:var(--navy);}
+.tab.on.tp{color:var(--purple);}
+.tab.on.tpk{color:var(--pink);}
+.bp{display:inline-block;margin-left:4px;padding:1px 5px;border-radius:20px;font-size:9px;background:rgba(248,113,113,.2);color:var(--red);}
+.bp.g{background:rgba(74,222,128,.2);color:var(--green);}
+.bp.w{background:rgba(244,200,66,.2);color:var(--gold);}
+.bp.p{background:rgba(167,139,250,.2);color:var(--purple);}
+.bp.pk{background:rgba(244,114,182,.2);color:var(--pink);}
+
+.panel{display:none;} .panel.on{display:block;}
+.stitle{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+
+/* Issues */
+.issues{display:flex;flex-direction:column;gap:7px;}
+.issue{display:flex;align-items:flex-start;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 13px;}
+.ii{font-size:.9rem;flex-shrink:0;margin-top:1px;}
+.ib{flex:1;min-width:0;}
+.it{font-size:12px;font-weight:500;color:#e2e8f0;}
+.id{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.ir{font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);margin-top:3px;}
+.issue.err{border-left:3px solid var(--red);}
+.issue.warn{border-left:3px solid var(--gold);}
+.issue.info{border-left:3px solid var(--teal);}
+.issue.ok{border-left:3px solid var(--green);}
+.issue.flag{border-left:3px solid var(--pink);}
+
+/* Compare */
+.csum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+@media(max-width:560px){.cgrid{grid-template-columns:1fr;}}
+.ccol{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px;}
+.cct{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.cf{display:flex;align-items:center;justify-content:space-between;padding:5px 9px;border-radius:6px;margin-bottom:3px;font-family:'DM Mono',monospace;font-size:11px;gap:6px;}
+.cf.cm{background:rgba(74,222,128,.08);color:var(--green);}
+.cf.cx{background:rgba(248,113,113,.08);color:var(--red);}
+.cf.cc{background:rgba(244,200,66,.08);color:var(--gold);}
+.cfn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.cft{font-size:9px;padding:2px 6px;border-radius:7px;font-family:'Outfit',sans-serif;flex-shrink:0;}
+.tm{background:rgba(74,222,128,.2);color:var(--green);}
+.tn{background:rgba(248,113,113,.2);color:var(--red);}
+.tc{background:rgba(244,200,66,.2);color:var(--gold);}
+.mlist{display:flex;flex-direction:column;gap:5px;}
+.mrow{display:grid;grid-template-columns:1fr auto 1fr auto;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;}
+.mcsv{font-family:'DM Mono',monospace;font-size:11px;color:var(--teal);}
+.mind{font-family:'DM Mono',monospace;font-size:11px;color:var(--purple);}
+.mmid{color:var(--muted);font-size:12px;}
+.ms{font-size:10px;font-weight:600;flex-shrink:0;color:var(--gold);}
+
+/* Rename */
+.rgrid{display:flex;flex-direction:column;gap:6px;}
+.rrow{display:grid;grid-template-columns:1fr auto 1fr auto;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 11px;}
+.rfrom{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rarr{color:var(--teal);font-size:13px;}
+.rinput{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:#e2e8f0;font-family:'DM Mono',monospace;font-size:11px;width:100%;outline:none;transition:border-color .15s;}
+.rinput:focus{border-color:var(--teal);}
+.rauto{background:var(--teal);color:var(--navy);border:none;border-radius:5px;padding:4px 9px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Outfit',sans-serif;}
+
+/* Col grid */
+.cgr{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;}
+.cchip{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;}
+.cchip .nm{font-family:'DM Mono',monospace;color:#cbd5e1;font-size:11px;}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dok{background:var(--green);} .dw{background:var(--gold);} .de{background:var(--red);}
+
+/* Image list */
+.ilist{display:flex;flex-direction:column;gap:6px;}
+.irow{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;}
+.ipt{font-family:'DM Mono',monospace;font-size:11px;color:#94a3b8;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.irn{font-size:11px;color:var(--muted);flex-shrink:0;}
+.inote{font-size:10px;margin-left:auto;flex-shrink:0;}
+.inote.g{color:var(--green);} .inote.r{color:var(--red);} .inote.w{color:var(--gold);}
+
+/* Preview table */
+.twrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+thead tr{background:rgba(45,212,191,.07);}
+th{padding:8px 12px;text-align:left;font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);white-space:nowrap;border-bottom:1px solid var(--border);}
+td{padding:7px 12px;border-bottom:1px solid var(--border);color:#cbd5e1;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--card2);}
+td.tm2{color:var(--red);font-style:italic;}
+td.ti{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);}
+td.tf{background:rgba(244,114,182,.07);color:var(--pink);}
+
+/* ── CLEAN & PREP MODE ── */
+.clean-layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;}
+@media(max-width:680px){.clean-layout{grid-template-columns:1fr;}}
+.clean-main{}
+.clean-sidebar{display:flex;flex-direction:column;gap:12px;position:sticky;top:20px;}
+.sidebar-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.sc-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--pink);margin-bottom:10px;}
+.sc-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.sc-row:last-child{border-bottom:none;}
+.sc-label{color:var(--muted);}
+.sc-val{font-weight:600;color:#e2e8f0;}
+.sc-val.g{color:var(--green);} .sc-val.r{color:var(--red);} .sc-val.w{color:var(--gold);}
+
+/* Flag table */
+.flag-table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);margin-bottom:12px;}
+.flag-table{width:100%;border-collapse:collapse;font-size:11px;}
+.flag-table thead tr{background:rgba(244,114,182,.07);}
+.flag-table th{padding:8px 12px;text-align:left;font-family:'DM Mono',monospace;font-size:10px;color:var(--pink);border-bottom:1px solid var(--border);white-space:nowrap;}
+.flag-table td{padding:7px 12px;border-bottom:1px solid var(--border);color:#cbd5e1;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;}
+.flag-table tr:last-child td{border-bottom:none;}
+.flag-table tr:hover td{background:var(--card2);}
+.flag-pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:600;margin:1px;}
+.fp-missing{background:rgba(248,113,113,.15);color:var(--red);}
+.fp-photo{background:rgba(244,200,66,.15);color:var(--gold);}
+.fp-dup{background:rgba(167,139,250,.15);color:var(--purple);}
+
+/* Pad config */
+.pad-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.pad-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 12px;}
+.pad-col-name{font-family:'DM Mono',monospace;font-size:11px;color:#94a3b8;}
+.pad-input{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:#e2e8f0;font-size:11px;width:100%;outline:none;transition:border-color .15s;}
+.pad-input:focus{border-color:var(--pink);}
+
+/* Divider */
+.div{height:1px;background:var(--border);margin:16px 0;}
+
+/* Buttons */
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+.btn{padding:9px 20px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'Outfit',sans-serif;transition:all .15s;}
+.btn:hover{opacity:.88;}
+.bt{background:var(--teal);color:var(--navy);}
+.bg{background:var(--card);color:#e2e8f0;border:1px solid var(--border);}
+.bg:hover{background:var(--card2);}
+.bpur{background:var(--purple);color:var(--navy);}
+.bora{background:var(--orange);color:var(--navy);}
+.bpnk{background:var(--pink);color:var(--navy);}
+.bgr{background:var(--green);color:var(--navy);}
+
+/* No-data */
+.nodata{text-align:center;padding:40px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;}
+.nodata .big{font-size:2rem;margin-bottom:8px;}
+.nodata p{font-size:12px;color:var(--muted);line-height:1.7;}
+.nodata code{font-family:'DM Mono',monospace;font-size:11px;}
+
+.hdiv{height:1px;background:var(--border);margin:14px 0;}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--navy2);border:1px solid var(--teal);border-radius:10px;padding:10px 18px;font-size:12px;color:var(--teal);box-shadow:0 8px 28px rgba(0,0,0,.4);transform:translateY(16px);opacity:0;transition:all .3s;z-index:999;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+@media(max-width:560px){.sbar{grid-template-columns:repeat(2,1fr);}.rrow,.mrow{grid-template-columns:1fr 1fr;}.rarr,.mmid{display:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="cap">InDesign Data Merge Tool</div>
+  <h1>Graduation Program<br><em>CSV Validator</em></h1>
+  <p class="subtitle">Validate · Compare · Generate · Clean &amp; Prep your Data Merge files</p>
+</header>
+
+<!-- Mode Cards -->
+<div class="modes">
+  <div class="mc on" id="mc1" onclick="setMode(1)">
+    <div class="mc-icon">🔍</div>
+    <div class="mc-title">Validate CSV</div>
+    <div class="mc-desc">Check errors, empty fields &amp; image paths</div>
+  </div>
+  <div class="mc p2" id="mc2" onclick="setMode(2)">
+    <div class="mc-icon">⇄</div>
+    <div class="mc-title">Compare to InDesign</div>
+    <div class="mc-desc">Side-by-side field match against your template</div>
+  </div>
+  <div class="mc p3" id="mc3" onclick="setMode(3)">
+    <div class="mc-icon">✨</div>
+    <div class="mc-title">Generate CSV</div>
+    <div class="mc-desc">Build a fresh CSV from your InDesign fields</div>
+  </div>
+  <div class="mc p4" id="mc4" onclick="setMode(4)">
+    <div class="new-tag">NEW</div>
+    <div class="mc-icon">🧹</div>
+    <div class="mc-title">Clean &amp; Prep</div>
+    <div class="mc-desc">Flag incomplete records, pad blanks, fix names</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODE 1 — Validate
+══════════════════════════════════════════════ -->
+<div class="wf on" id="wf1">
+  <div class="urow">
+    <div class="uz" id="uz1"><input type="file" accept=".csv,.txt" id="fi1">
+      <div class="uz-lbl c-teal">Your Data File</div>
+      <div class="uz-icon">📊</div>
+      <p><strong>Upload your CSV</strong></p>
+      <p style="margin-top:3px;font-size:11px;">Drop your Data Merge source file here</p>
+      <div id="lb1" style="display:none"><span class="lbadge lbt" id="lbt1"></span></div>
+    </div>
+    <div class="info-box">
+      <div class="info-lbl c-teal">What gets checked</div>
+      <div class="info-list">
+        <span>✓ Duplicate column names</span>
+        <span>✓ Spaces &amp; special chars in headers</span>
+        <span>✓ Empty rows &amp; missing cells</span>
+        <span>✓ Image columns missing @ prefix</span>
+        <span>✓ UTF-8 BOM encoding issues</span>
+        <span>✓ Columns that are mostly empty</span>
+      </div>
+    </div>
+  </div>
+  <div id="app1" style="display:none">
+    <div class="sbar" id="sb1"></div>
+    <div class="tabs" id="tabs1">
+      <div class="tab on" data-p="v-issues">Issues <span class="bp" id="v-ib">0</span></div>
+      <div class="tab" data-p="v-cols">Columns <span class="bp g" id="v-cb">0</span></div>
+      <div class="tab" data-p="v-rename">Fix Names</div>
+      <div class="tab" data-p="v-imgs">Images <span class="bp w" id="v-imgb">0</span></div>
+      <div class="tab" data-p="v-prev">Preview</div>
+    </div>
+    <div class="panel on" id="panel-v-issues"><div class="issues" id="v-ilist"></div></div>
+    <div class="panel" id="panel-v-cols"><div class="stitle">All CSV Columns</div><div class="cgr" id="v-cgr"></div></div>
+    <div class="panel" id="panel-v-rename">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">InDesign uses <code style="font-family:'DM Mono',monospace;color:var(--teal)">«FieldName»</code> — column names must match exactly including capitalization.</p>
+      <div class="rgrid" id="v-rgr"></div>
+      <div class="acts"><button class="btn bt" onclick="dlFixed(1)">⬇ Download Fixed CSV</button><button class="btn bg" onclick="autoFix(1)">✨ Auto-fix All</button></div>
+    </div>
+    <div class="panel" id="panel-v-imgs"><div class="ilist" id="v-ilist2"></div></div>
+    <div class="panel" id="panel-v-prev"><p style="font-size:12px;color:var(--muted);margin-bottom:10px;">First 10 rows — <span style="color:var(--red)">red=empty</span>, <span style="color:var(--gold)">gold=image</span>.</p><div class="twrap"><table id="v-tbl"></table></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODE 2 — Compare
+══════════════════════════════════════════════ -->
+<div class="wf" id="wf2">
+  <div class="urow">
+    <div class="uz" id="uz2"><input type="file" accept=".csv,.txt" id="fi2">
+      <div class="uz-lbl c-teal">Step 1 — CSV</div>
+      <div class="uz-icon">📊</div>
+      <p><strong>Upload your CSV</strong></p>
+      <div id="lb2" style="display:none"><span class="lbadge lbt" id="lbt2"></span></div>
+    </div>
+    <div class="uz upur" id="uz3"><input type="file" accept=".txt,.tagx,.idtt" id="fi3">
+      <div class="uz-lbl c-purple">Step 2 — InDesign Template</div>
+      <div class="uz-icon">🖨️</div>
+      <p><strong>Upload Tagged Text</strong></p>
+      <p style="font-size:11px;margin-top:3px;">File → Export → InDesign Tagged Text</p>
+      <div id="lb3" style="display:none"><span class="lbadge lbp" id="lbt3"></span></div>
+    </div>
+  </div>
+  <div class="paste-box">
+    <div class="paste-lbl c-purple">— or paste InDesign field names —</div>
+    <p class="paste-desc">Open the Data Merge panel (Window → Utilities → Data Merge) and paste the field names. One per line or comma-separated. <code style="font-family:'DM Mono',monospace;color:var(--purple)">«brackets»</code> optional.</p>
+    <textarea class="fta" id="inddPaste2" placeholder="«Student_Name»&#10;«First_Name»&#10;«Last_Name»&#10;«@Photo»&#10;«Honors»"></textarea>
+    <button class="pb-btn bg-pur" onclick="parsePaste2()">🔗 Compare Fields</button>
+  </div>
+  <div id="app2" style="display:none">
+    <div class="sbar" id="sb2"></div>
+    <div class="tabs" id="tabs2">
+      <div class="tab on tp" data-p="c-cmp">⇄ Compare <span class="bp p" id="c-cb">—</span></div>
+      <div class="tab" data-p="c-issues">Issues <span class="bp" id="c-ib">0</span></div>
+      <div class="tab" data-p="c-rename">Fix Names</div>
+      <div class="tab" data-p="c-imgs">Images <span class="bp w" id="c-imgb">0</span></div>
+      <div class="tab" data-p="c-prev">Preview</div>
+    </div>
+    <div class="panel on" id="panel-c-cmp"><div id="cmpContent"><div class="nodata"><div class="big">⇄</div><p>Upload both files or paste field names above.</p></div></div></div>
+    <div class="panel" id="panel-c-issues"><div class="issues" id="c-ilist"></div></div>
+    <div class="panel" id="panel-c-rename">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Auto button uses InDesign field name where a close match is found.</p>
+      <div class="rgrid" id="c-rgr"></div>
+      <div class="acts"><button class="btn bt" onclick="dlFixed(2)">⬇ Download Fixed CSV</button><button class="btn bpur" onclick="applyClose()">✨ Auto-rename Close Matches</button></div>
+    </div>
+    <div class="panel" id="panel-c-imgs"><div class="ilist" id="c-ilist2"></div></div>
+    <div class="panel" id="panel-c-prev"><div class="twrap"><table id="c-tbl"></table></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODE 3 — Generate CSV
+══════════════════════════════════════════════ -->
+<div class="wf" id="wf3">
+  <div class="urow">
+    <div class="uz uora" id="uz4"><input type="file" accept=".txt,.tagx,.idtt" id="fi4">
+      <div class="uz-lbl c-orange">Option A — Tagged Text</div>
+      <div class="uz-icon">🖨️</div>
+      <p><strong>Upload InDesign Tagged Text</strong></p>
+      <p style="font-size:11px;margin-top:3px;">Fields extracted → CSV built automatically</p>
+      <div id="lb4" style="display:none"><span class="lbadge lbo" id="lbt4"></span></div>
+    </div>
+    <div class="info-box">
+      <div class="info-lbl c-orange">What you get</div>
+      <div class="info-list">
+        <span>✓ CSV with all your field names as headers</span>
+        <span>✓ Empty rows ready to fill with student data</span>
+        <span>✓ Image columns pre-formatted with @</span>
+        <span>✓ Correct column order matching InDesign</span>
+      </div>
+    </div>
+  </div>
+  <div class="paste-box" style="border-color:rgba(251,146,60,.2)">
+    <div class="paste-lbl c-orange">— Option B — Type or paste field names —</div>
+    <p class="paste-desc">Enter fields you want. One per line or comma-separated. Prefix image fields with <code style="font-family:'DM Mono',monospace;color:var(--orange)">@</code>.</p>
+    <textarea class="fta" id="genPaste" style="border-color:rgba(251,146,60,.3)" placeholder="Student_Name&#10;First_Name&#10;Last_Name&#10;@Photo&#10;Honors&#10;Awards&#10;College_Plans&#10;Senior_Quote"></textarea>
+    <button class="pb-btn" style="background:var(--orange);color:var(--navy)" onclick="parseGenPaste()">⚡ Build Field List</button>
+  </div>
+  <div id="genArea" style="display:none">
+    <div class="stitle">Quick-add common fields</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px;" id="qchips"></div>
+    <div class="stitle">Your fields <span style="color:var(--muted);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">(drag to reorder)</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;" id="gfBuilder"></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <input id="newF" style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:#e2e8f0;font-family:'DM Mono',monospace;font-size:11px;outline:none;" placeholder="Add a field name..." onkeydown="if(event.key==='Enter')addFieldM()">
+      <button class="btn" style="background:var(--orange);color:var(--navy)" onclick="addFieldM()">+ Add</button>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div class="stitle c-orange" style="color:var(--orange)">Preview — column headers</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;" id="genPrev"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <span style="font-size:12px;color:var(--muted)">Empty student rows:</span>
+      <input type="number" id="rowCt" value="30" min="1" max="500" style="width:70px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:#e2e8f0;font-size:12px;text-align:center;outline:none;">
+    </div>
+    <div class="acts">
+      <button class="btn" style="background:var(--orange);color:var(--navy)" onclick="dlGenCSV()">⬇ Download CSV Template</button>
+      <button class="btn bgr" onclick="dlGenSample()">⬇ With Sample Row</button>
+      <button class="btn bg" onclick="copyHeaders()">📋 Copy Headers</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODE 4 — Clean & Prep
+══════════════════════════════════════════════ -->
+<div class="wf" id="wf4">
+  <div class="urow">
+    <div class="uz upnk" id="uz5"><input type="file" accept=".csv,.txt" id="fi5">
+      <div class="uz-lbl c-pink">Your Graduation CSV</div>
+      <div class="uz-icon">🧹</div>
+      <p><strong>Upload your CSV</strong></p>
+      <p style="font-size:11px;margin-top:3px;">103 students, 6+ columns — let's clean it up</p>
+      <div id="lb5" style="display:none"><span class="lbadge lbpk" id="lbt5"></span></div>
+    </div>
+    <div class="info-box" style="border-color:rgba(244,114,182,.15)">
+      <div class="info-lbl c-pink">What this mode does</div>
+      <div class="info-list">
+        <span>🚩 Flags every incomplete record</span>
+        <span>🖼 Identifies missing photo paths</span>
+        <span>🟡 Shows exactly which fields are empty per student</span>
+        <span>✏️ Lets you set placeholder text per column</span>
+        <span>⬇ Downloads padded + flagged CSV</span>
+        <span>🔗 Then validates names against InDesign</span>
+      </div>
+    </div>
+  </div>
+  <div id="app4" style="display:none">
+    <div class="sbar" id="sb4"></div>
+    <div class="tabs" id="tabs4">
+      <div class="tab on tpk" data-p="k-flags">🚩 Flagged Records <span class="bp pk" id="k-fb">0</span></div>
+      <div class="tab tpk" data-p="k-pad">✏️ Pad Empty Fields</div>
+      <div class="tab tpk" data-p="k-names">🔗 Fix Column Names</div>
+      <div class="tab" data-p="k-prev">Preview</div>
+    </div>
+
+    <!-- Flagged Records -->
+    <div class="panel on" id="panel-k-flags">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Every student with at least one empty field is listed below. Rows highlighted in pink have a missing photo path.</p>
+      <div class="flag-table-wrap">
+        <table class="flag-table" id="k-ftbl"></table>
+      </div>
+      <div class="acts">
+        <button class="btn bpnk" onclick="dlFlagged()">⬇ Download Flagged CSV</button>
+        <button class="btn bg" onclick="scrollToPad()">✏️ Set Placeholders →</button>
+      </div>
+    </div>
+
+    <!-- Pad empty fields -->
+    <div class="panel" id="panel-k-pad">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Set a placeholder value for each column. Empty cells in that column will be filled with this text in the downloaded CSV. Leave blank to keep cells empty.</p>
+      <div class="pad-grid" id="k-padGrid"></div>
+      <div class="acts">
+        <button class="btn bpnk" onclick="dlPadded()">⬇ Download Padded CSV</button>
+        <button class="btn bg" onclick="quickPad()">⚡ Quick-fill Defaults</button>
+      </div>
+    </div>
+
+    <!-- Fix column names (inline compare with InDesign) -->
+    <div class="panel" id="panel-k-names">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Paste your InDesign field names below to validate column names, then download a fixed CSV ready for Data Merge.</p>
+      <div class="paste-box" style="margin-bottom:12px;">
+        <div class="paste-lbl c-pink">InDesign field names</div>
+        <textarea class="fta" id="kInddPaste" style="border-color:rgba(244,114,182,.3)" placeholder="Paste «field names» from your Data Merge panel, one per line or comma-separated..."></textarea>
+        <button class="pb-btn bg-pnk" onclick="parseKIndd()">🔗 Check Names</button>
+      </div>
+      <div id="k-namesContent"><div class="nodata"><div class="big">🔗</div><p>Paste your InDesign field names above to compare.</p></div></div>
+      <div class="acts" style="display:none" id="k-nameActs">
+        <button class="btn bt" onclick="dlFixed(4)">⬇ Download Fixed CSV</button>
+        <button class="btn bpnk" onclick="applyCloseK()">✨ Auto-rename Close Matches</button>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="panel" id="panel-k-prev">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">First 15 rows. <span style="color:var(--pink)">Pink = flagged (has empty fields)</span>.</p>
+      <div class="twrap"><table id="k-tbl"></table></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+<div class="toast" id="toast"></div>
+<script>
+// ── State ────────────────────────────────────────────────────
+const S = {
+  csv1:{h:[],r:[],raw:''},
+  csv2:{h:[],r:[],raw:''},
+  csv4:{h:[],r:[],raw:''},
+  indd2:[],
+  indd4:[],
+  rn1:{}, rn2:{}, rn4:{},
+  genFields:[],
+  padValues:{},
+};
+const IMG = ['photo','image','picture','headshot','portrait','pic','path','img'];
+const IMGEXT = ['.jpg','.jpeg','.png','.tif','.tiff','.eps','.pdf','.psd'];
+const QFIELDS = ['Student_Name','First_Name','Last_Name','@Photo','Honors','Awards','GPA','Activities','College_Plans','Senior_Quote','Pathway','NHS_Member','DECA_Member','Scholarship','@Award_Logo'];
+
+// ── Mode switching ───────────────────────────────────────────
+let curMode = 1;
+function setMode(n){
+  curMode = n;
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('wf'+i).classList.toggle('on', i===n);
+    const c = document.getElementById('mc'+i);
+    c.classList.remove('on');
+  });
+  const card = document.getElementById('mc'+n);
+  card.classList.add('on');
+  const cls = ['','','p2','p3','p4'][n];
+  if(cls) card.classList.add(cls);
+}
+
+// ── Upload wiring ────────────────────────────────────────────
+function wireUpload(zId, iId, cb){
+  const z=document.getElementById(zId), inp=document.getElementById(iId);
+  z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('drag');});
+  z.addEventListener('dragleave',()=>z.classList.remove('drag'));
+  z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('drag');if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0],cb);});
+  inp.addEventListener('change',e=>{if(e.target.files[0])readFile(e.target.files[0],cb);});
+}
+function readFile(f,cb){const r=new FileReader();r.onload=e=>cb(e.target.result,f.name);r.readAsText(f);}
+
+wireUpload('uz1','fi1',(t,n)=>{ parseCSV(t,n,S.csv1,()=>{ badge('lb1','lbt1',`✓ ${n} · ${S.csv1.r.length} rows`,'lbt'); S.rn1={}; S.csv1.h.forEach(h=>{S.rn1[h]=h;}); document.getElementById('app1').style.display='block'; renderValidate(); showToast(`✓ ${n} loaded`); }); });
+wireUpload('uz2','fi2',(t,n)=>{ parseCSV(t,n,S.csv2,()=>{ badge('lb2','lbt2',`✓ ${n} · ${S.csv2.r.length} rows`,'lbt'); S.rn2={}; S.csv2.h.forEach(h=>{S.rn2[h]=h;}); document.getElementById('app2').style.display='block'; renderCompareAll(); showToast(`✓ ${n} loaded`); }); });
+wireUpload('uz3','fi3',(t,n)=>{ extractIndd(t,S.indd2); badge('lb3','lbt3',`✓ ${n} · ${S.indd2.length} fields`,'lbp'); if(S.csv2.h.length){document.getElementById('app2').style.display='block';renderCompareAll();} showToast(`✓ ${S.indd2.length} fields found`); });
+wireUpload('uz4','fi4',(t,n)=>{ const f=[]; for(const m of t.matchAll(/«([^»]+)»/g))f.push(m[1].trim()); for(const m of t.matchAll(/<\$([^>]+)>/g))f.push(m[1].trim()); const u=[...new Set(f)]; if(!u.length){showToast('⚠ No fields found');return;} S.genFields=u.map(x=>({name:x,type:isImg(x)?'image':'text'})); badge('lb4','lbt4',`✓ ${n} · ${u.length} fields`,'lbo'); document.getElementById('genArea').style.display='block'; renderGen(); showToast(`✓ ${u.length} fields extracted`); });
+wireUpload('uz5','fi5',(t,n)=>{ parseCSV(t,n,S.csv4,()=>{ badge('lb5','lbt5',`✓ ${n} · ${S.csv4.r.length} rows`,'lbpk'); S.rn4={}; S.csv4.h.forEach(h=>{S.rn4[h]=h;}); S.padValues={}; document.getElementById('app4').style.display='block'; renderClean(); showToast(`✓ ${n} loaded`); }); });
+
+function badge(divId,spanId,txt,cls){ document.getElementById(divId).style.display='block'; const s=document.getElementById(spanId); s.textContent=txt; s.className='lbadge '+cls; }
+
+// ── CSV parsing ──────────────────────────────────────────────
+function parseCSV(text,name,store,cb){
+  store.raw=text; store.name=name;
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length){showToast('⚠ Empty file');return;}
+  let delim=',',mx=1;
+  for(const d of[',','\t',';','|']){const c=lines[0].split(d).length;if(c>mx){mx=c;delim=d;}}
+  store.h=parseRow(lines[0],delim);
+  store.r=lines.slice(1).map(l=>parseRow(l,delim));
+  store.delim=delim;
+  cb();
+}
+function parseRow(line,d){
+  const res=[];let cur='',q=false;
+  for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&!q)q=true;else if(c==='"'&&q)q=false;else if(c===d&&!q){res.push(cur.trim());cur='';}else cur+=c;}
+  res.push(cur.trim());return res;
+}
+function extractIndd(text,arr){
+  arr.length=0;const f=new Set();
+  for(const m of text.matchAll(/«([^»]+)»/g))f.add(m[1].trim());
+  for(const m of text.matchAll(/<\$([^>]+)>/g))f.add(m[1].trim());
+  arr.push(...f);
+}
+function isImg(n){return IMG.some(i=>n.toLowerCase().replace('@','').includes(i));}
+function normF(f){return f.toLowerCase().replace(/^@/,'').replace(/[\s_-]/g,'').trim();}
+function matchType(h,list){
+  const ex=list.find(f=>f===h); if(ex)return{t:'exact',m:ex};
+  const ci=list.find(f=>f.toLowerCase()===h.toLowerCase()); if(ci)return{t:'close',m:ci};
+  const nm=list.find(f=>normF(f)===normF(h)); if(nm)return{t:'close',m:nm};
+  return{t:'none',m:null};
+}
+function suggestRename(col){
+  if(isImg(col)&&!col.startsWith('@'))return'@'+col.replace(/\s/g,'_');
+  if(/\s/.test(col))return col.trim().replace(/\s+/g,'_');
+  if(/[^\w@]/.test(col))return col.replace(/[^\w@]/g,'_');
+  return col;
+}
+function countEmpty(s){let c=0;s.r.forEach(r=>r.forEach(x=>{if(!x||!x.trim())c++;}));return c;}
+
+// ── Shared issue builder ─────────────────────────────────────
+function buildIssues(s, inddF){
+  const issues=[]; const h=s.h; const seen={};
+  h.forEach((c,i)=>{if(seen[c]!==undefined)issues.push({sev:'err',icon:'🔴',t:`Duplicate column: "${c}"`,d:`Positions ${seen[c]+1} and ${i+1}. InDesign will only read one.`,r:''});seen[c]=i;});
+  h.forEach(c=>{if(/\s/.test(c))issues.push({sev:'warn',icon:'🟡',t:`Spaces in column: "${c}"`,d:'Use underscores instead of spaces.',r:''});});
+  h.forEach(c=>{if(/[^\w\s@]/.test(c))issues.push({sev:'warn',icon:'🟡',t:`Special chars in: "${c}"`,d:'Special characters can break field references.',r:''});});
+  const eR=[];s.r.forEach((r,i)=>{if(r.every(x=>!x||!x.trim()))eR.push(i+2);});
+  if(eR.length)issues.push({sev:'warn',icon:'🟡',t:`${eR.length} completely empty row(s)`,d:'These produce blank records in the merged document.',r:`Rows: ${eR.slice(0,10).join(', ')}${eR.length>10?'…':''}`});
+  const sR=[];s.r.forEach((r,i)=>{if(r.length<h.length)sR.push(i+2);});
+  if(sR.length)issues.push({sev:'err',icon:'🔴',t:`${sR.length} row(s) missing columns`,d:'Rows have fewer values than headers — fields will be blank or misaligned.',r:`Rows: ${sR.slice(0,10).join(', ')}${sR.length>10?'…':''}`});
+  h.filter(c=>isImg(c)).forEach(c=>{if(!c.startsWith('@'))issues.push({sev:'info',icon:'🔵',t:`Image field "${c}" needs @ prefix`,d:`Rename to: @${c.replace(/\s/g,'_')}`,r:''});});
+  if(s.raw.charCodeAt(0)===0xFEFF)issues.push({sev:'warn',icon:'🟡',t:'UTF-8 BOM detected',d:'Save as UTF-8 without BOM to avoid InDesign misreading the first column.',r:''});
+  h.forEach((c,i)=>{if(!c||!c.trim())issues.push({sev:'err',icon:'🔴',t:`Column ${i+1} has no name`,d:'Unnamed columns are ignored by InDesign.',r:''});});
+  h.forEach((c,ci)=>{const e=s.r.filter(r=>!r[ci]||!r[ci].trim()).length;const p=Math.round(e/s.r.length*100);if(p>20&&s.r.length>3)issues.push({sev:'warn',icon:'🟡',t:`"${c}" is ${p}% empty`,d:`${e} of ${s.r.length} rows have no value here.`,r:''});});
+  if(inddF&&inddF.length&&h.length){
+    const cm=h.map(hh=>matchType(hh,inddF));
+    const un=h.filter((_,i)=>cm[i].t==='none');
+    if(un.length)issues.push({sev:'warn',icon:'🟡',t:`${un.length} CSV column(s) not in InDesign`,d:`No placeholder for: ${un.join(', ')}`,r:''});
+    const mi=new Set(cm.filter(m=>m.m).map(m=>m.m));
+    const ui=inddF.filter(f=>!mi.has(f));
+    if(ui.length)issues.push({sev:'err',icon:'🔴',t:`${ui.length} InDesign field(s) missing from CSV`,d:`InDesign expects: ${ui.join(', ')}`,r:''});
+  }
+  if(!issues.length)issues.push({sev:'ok',icon:'✅',t:'No issues found!',d:'Your CSV looks ready for Data Merge.',r:''});
+  return issues;
+}
+
+function renderIssues(id,issues){
+  document.getElementById(id).innerHTML=issues.map(iss=>`<div class="issue ${iss.sev}"><div class="ii">${iss.icon}</div><div class="ib"><div class="it">${iss.t}</div><div class="id">${iss.d}</div>${iss.r?`<div class="ir">${iss.r}</div>`:''}</div></div>`).join('');
+}
+
+function renderStatBar(id,s,inddF){
+  const iss=buildIssues(s,inddF);const ec=countEmpty(s);
+  document.getElementById(id).innerHTML=`
+    <div class="stat"><div class="val">${s.r.length}</div><div class="lbl">Records</div></div>
+    <div class="stat"><div class="val">${s.h.length}</div><div class="lbl">Columns</div></div>
+    <div class="stat ${iss.filter(i=>i.sev==='err').length?'se':'sg'}"><div class="val">${iss.filter(i=>i.sev==='err').length}</div><div class="lbl">Errors</div></div>
+    <div class="stat ${ec?'sw':'sg'}"><div class="val">${ec}</div><div class="lbl">Empty Cells</div></div>`;
+}
+
+function renderColGrid(id,headers,inddF){
+  document.getElementById(id).innerHTML=headers.map(c=>{
+    let d='dok',tip='OK';
+    if(isImg(c)&&!c.startsWith('@')){d='dw';tip='Image: add @ prefix';}
+    if(/\s/.test(c)){d='dw';tip='Has spaces';}
+    if(!c.trim()){d='de';tip='No name';}
+    if(inddF&&inddF.length){const m=matchType(c,inddF);if(m.t==='none'){d='de';tip='Not in InDesign';}else if(m.t==='close'){d='dw';tip='Close match only';}}
+    return`<div class="cchip" title="${tip}"><span class="nm">${c||'(empty)'}</span><span class="dot ${d}"></span></div>`;
+  }).join('');
+}
+
+function renderRenameGrid(id,s,rn,inddF){
+  document.getElementById(id).innerHTML=s.h.map((c,i)=>{
+    const im=inddF&&inddF.length?matchType(c,inddF):null;
+    const sug=(im&&im.t==='close')?im.m:suggestRename(c);
+    const sc=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const ss=sug.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return`<div class="rrow"><span class="rfrom">${c||'(empty)'}</span><span class="rarr">→</span><input class="rinput" id="${id}_r${i}" value="${rn[c]||c}" placeholder="New name..." oninput="updateRn('${id}','${sc}',this.value)"><button class="rauto" onclick="applyRn('${id}',${i},'${ss}','${sc}')">Auto</button></div>`;
+  }).join('');
+}
+function updateRn(gid,c,v){if(gid.startsWith('v'))S.rn1[c]=v;else if(gid.startsWith('c'))S.rn2[c]=v;else S.rn4[c]=v;}
+function applyRn(gid,i,sug,c){const inp=document.getElementById(`${gid}_r${i}`);inp.value=sug;if(gid.startsWith('v'))S.rn1[c]=sug;else if(gid.startsWith('c'))S.rn2[c]=sug;else S.rn4[c]=sug;showToast('✓ '+sug);}
+
+function renderImgList(id,s){
+  const imgCols=s.h.filter(c=>isImg(c));
+  if(!imgCols.length){document.getElementById(id).innerHTML=`<div class="issue info"><div class="ii">ℹ️</div><div class="ib"><div class="it">No image columns detected</div><div class="id">Image columns should contain: photo, image, picture, or headshot in the name. Prefix with @ in InDesign.</div></div></div>`;return;}
+  const rows=[];imgCols.forEach(c=>{const ci=s.h.indexOf(c);s.r.forEach((r,ri)=>{const v=(r[ci]||'').trim();const hasE=IMGEXT.some(e=>v.toLowerCase().endsWith(e));const st=!v?'missing':!hasE?'warn':'ok';rows.push({c,row:ri+2,path:v,st,nm:(r[0]||`Row ${ri+2}`)});});});
+  const pb=rows.filter(p=>p.st!=='ok');const show=pb.length?pb:rows.slice(0,15);
+  const ic={ok:'✅',warn:'⚠️',missing:'❌'},nc={ok:'Valid',warn:'No extension',missing:'Empty'},cc={ok:'g',warn:'w',missing:'r'};
+  document.getElementById(id).innerHTML=show.map(p=>`<div class="irow"><span style="font-size:.9rem;flex-shrink:0">${ic[p.st]}</span><span class="ipt">${p.path||'(empty)'}</span><span class="irn">${p.nm} · Row ${p.row}</span><span class="inote ${cc[p.st]}">${nc[p.st]}</span></div>`).join('')+(pb.length===0?`<div class="issue ok" style="margin-top:8px"><div class="ii">✅</div><div class="ib"><div class="it">All image paths look valid</div><div class="id">Remember: paths must be accessible from your .indd file location.</div></div></div>`:'');
+}
+
+function renderPreviewTable(id,s,flaggedRows){
+  const rows=s.r.slice(0,15);
+  const imgCols=s.h.map((h,i)=>isImg(h)?i:-1).filter(x=>x>=0);
+  const fr=flaggedRows||new Set();
+  document.getElementById(id).innerHTML=`<thead><tr>${s.h.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map((row,ri)=>`<tr>${s.h.map((_,i)=>{const v=row[i]||'';let cls='';if(!v.trim())cls='tm2';else if(imgCols.includes(i))cls='ti';if(fr.has(ri))cls+=' tf';return`<td class="${cls}" title="${v}">${v||'(empty)'}</td>`;}).join('')}</tr>`).join('')}</tbody>`;
+}
+
+// ── Mode 1: Validate ─────────────────────────────────────────
+function renderValidate(){
+  const s=S.csv1, iss=buildIssues(s,[]);
+  renderStatBar('sb1',s,[]);
+  renderIssues('v-ilist',iss);
+  renderColGrid('v-cgr',s.h,[]);
+  renderRenameGrid('v-rgr',s,S.rn1,[]);
+  renderImgList('v-ilist2',s);
+  renderPreviewTable('v-tbl',s);
+  document.getElementById('v-ib').textContent=iss.filter(i=>i.sev!=='ok').length;
+  document.getElementById('v-cb').textContent=s.h.length;
+  document.getElementById('v-imgb').textContent=s.h.filter(c=>isImg(c)).length;
+}
+
+// ── Mode 2: Compare ──────────────────────────────────────────
+function parsePaste2(){
+  const txt=document.getElementById('inddPaste2').value.trim();
+  if(!txt){showToast('⚠ Enter field names first');return;}
+  S.indd2.length=0;
+  const f=new Set();
+  txt.split(/[\n,]+/).forEach(p=>{let x=p.trim().replace(/^[«<\s]+|[»>\s]+$/g,'').trim();if(x.length>0&&x.length<80)f.add(x);});
+  S.indd2.push(...f);
+  if(!S.indd2.length){showToast('⚠ Could not parse fields');return;}
+  document.getElementById('app2').style.display='block';
+  renderCompareAll();
+  showToast(`✓ Parsed ${S.indd2.length} fields`);
+  switchTab('c-cmp','tabs2');
+}
+function renderCompareAll(){
+  if(!S.csv2.h.length)return;
+  renderStatBar('sb2',S.csv2,S.indd2);
+  renderComparePanel();
+  renderIssues('c-ilist',buildIssues(S.csv2,S.indd2));
+  renderRenameGrid('c-rgr',S.csv2,S.rn2,S.indd2);
+  renderImgList('c-ilist2',S.csv2);
+  renderPreviewTable('c-tbl',S.csv2);
+  const iss=buildIssues(S.csv2,S.indd2);
+  document.getElementById('c-ib').textContent=iss.filter(i=>i.sev!=='ok').length;
+  document.getElementById('c-imgb').textContent=S.csv2.h.filter(c=>isImg(c)).length;
+}
+function renderComparePanel(){
+  const cont=document.getElementById('cmpContent');
+  if(!S.indd2.length){cont.innerHTML=`<div class="nodata"><div class="big">⇄</div><p>Upload Tagged Text or paste field names above.</p></div>`;return;}
+  const h=S.csv2.h; const cm=h.map(x=>({x,...matchType(x,S.indd2)}));
+  const mi=new Set(cm.filter(m=>m.m).map(m=>m.m));
+  const ui=S.indd2.filter(f=>!mi.has(f));
+  const ex=cm.filter(m=>m.t==='exact').length, cl=cm.filter(m=>m.t==='close').length, no=cm.filter(m=>m.t==='none').length;
+  const tot=cl+no+ui.length;
+  document.getElementById('c-cb').textContent=tot?(tot+' issues'):'✓ Match';
+  document.getElementById('c-cb').className='bp '+(tot===0?'g':no+ui.length>0?'':'w');
+  cont.innerHTML=`
+    <div class="csum">
+      <div class="stat sg"><div class="val">${ex}</div><div class="lbl">Exact Match</div></div>
+      <div class="stat sw"><div class="val">${cl}</div><div class="lbl">Close Match</div></div>
+      <div class="stat se"><div class="val">${no+ui.length}</div><div class="lbl">Not Found</div></div>
+    </div>
+    ${cl>0?`<div class="issue warn" style="margin-bottom:14px"><div class="ii">⚠️</div><div class="ib"><div class="it">Close matches found — not exact</div><div class="id">InDesign requires a character-perfect match. Use the Fix Names tab to correct your CSV.</div></div></div>`:''}
+    <div class="cgrid">
+      <div class="ccol"><div class="cct c-teal">📊 CSV Columns (${h.length})</div>
+        ${h.length?cm.map(m=>`<div class="cf ${m.t==='exact'?'cm':m.t==='close'?'cc':'cx'}"><span class="cfn">${m.x}</span><span class="cft ${m.t==='exact'?'tm':m.t==='close'?'tc':'tn'}">${m.t==='exact'?'✓ match':m.t==='close'?'≈ close':'✗ missing'}</span></div>`).join(''):'<p style="color:var(--muted);font-size:11px">Upload CSV first</p>'}
+      </div>
+      <div class="ccol"><div class="cct c-purple">🖨️ InDesign (${S.indd2.length})</div>
+        ${S.indd2.map(f=>{const im=mi.has(f);const ic=cm.some(m=>m.t==='close'&&m.m===f);return`<div class="cf ${im?(ic?'cc':'cm'):'cx'}"><span class="cfn">${f}</span><span class="cft ${im?(ic?'tc':'tm'):'tn'}">${im?(ic?'≈ close':'✓ match'):'✗ not in CSV'}</span></div>`;}).join('')}
+      </div>
+    </div>
+    ${ui.length?`<div class="hdiv"></div><div class="stitle">InDesign fields with no CSV column</div><div class="issues" style="margin-bottom:12px">${ui.map(f=>`<div class="issue err"><div class="ii">❌</div><div class="ib"><div class="it">«${f}» — not in CSV</div><div class="id">Add a column named <strong>${f}</strong> to your CSV, or remove this placeholder from InDesign.</div></div></div>`).join('')}</div>`:''}
+    ${cm.filter(m=>m.t==='close').length?`<div class="hdiv"></div><div class="stitle" style="margin-bottom:10px">Close matches — rename to fix</div><div class="mlist">${cm.filter(m=>m.t==='close').map(m=>`<div class="mrow"><span class="mcsv">${m.x}</span><span class="mmid">→</span><span class="mind">${m.m}</span><span class="ms">rename CSV</span></div>`).join('')}</div>`:''}
+    ${ex===h.length&&h.length>0&&ui.length===0?`<div class="issue ok" style="margin-top:14px"><div class="ii">🎉</div><div class="ib"><div class="it">Perfect match!</div><div class="id">Every CSV column matches an InDesign placeholder. Your Data Merge is ready to run.</div></div></div>`:''}`;
+}
+function applyClose(){
+  if(!S.indd2.length)return; let n=0;
+  S.csv2.h.forEach((c,i)=>{const m=matchType(c,S.indd2);if(m.t==='close'&&m.m){S.rn2[c]=m.m;n++;}});
+  renderRenameGrid('c-rgr',S.csv2,S.rn2,S.indd2); renderComparePanel(); showToast(`✨ Staged ${n} rename(s)`); switchTab('c-rename','tabs2');
+}
+
+// ── Mode 3: Generate ─────────────────────────────────────────
+function parseGenPaste(){
+  const txt=document.getElementById('genPaste').value.trim();
+  if(!txt){showToast('⚠ Enter field names first');return;}
+  const f=[];
+  txt.split(/[\n,]+/).forEach(p=>{let x=p.trim().replace(/^[«<\s]+|[»>\s]+$/g,'').trim();if(x.length>0&&x.length<80&&!f.find(y=>y.name===x))f.push({name:x,type:isImg(x)?'image':'text'});});
+  if(!f.length){showToast('⚠ Could not parse fields');return;}
+  S.genFields=f; document.getElementById('genArea').style.display='block'; renderGen(); showToast(`✓ ${f.length} fields ready`);
+}
+function renderGen(){
+  // Quick chips
+  document.getElementById('qchips').innerHTML=QFIELDS.map(f=>{
+    const added=S.genFields.some(g=>g.name===f);
+    return`<span style="padding:4px 11px;border-radius:20px;font-size:10px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:${added?'var(--green)':'#94a3b8'};font-family:'DM Mono',monospace;transition:all .15s" onclick="addQF('${f}')">${f}</span>`;
+  }).join('');
+  // Builder
+  let dragI=null;
+  document.getElementById('gfBuilder').innerHTML=S.genFields.map((f,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 150px 34px;gap:7px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 11px;cursor:grab" draggable="true" data-i="${i}" ondragstart="window._di=${i}" ondragover="event.preventDefault()" ondrop="window._df(${i})">
+      <input style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:#e2e8f0;font-family:'DM Mono',monospace;font-size:11px;outline:none;width:100%" value="${f.name}" oninput="S.genFields[${i}].name=this.value;updGP()">
+      <select style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;padding:6px 7px;color:#e2e8f0;font-size:11px;width:100%;outline:none" onchange="S.genFields[${i}].type=this.value;updGP()">
+        <option value="text"${f.type==='text'?' selected':''}>📝 Text</option>
+        <option value="image"${f.type==='image'?' selected':''}>🖼 Image (@)</option>
+        <option value="number"${f.type==='number'?' selected':''}>🔢 Number</option>
+      </select>
+      <button style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.2);border-radius:6px;color:var(--red);cursor:pointer;width:30px;height:30px;font-size:13px" onclick="S.genFields.splice(${i},1);renderGen()">✕</button>
+    </div>`).join('');
+  window._df=function(ti){if(window._di===null||window._di===ti)return;const item=S.genFields.splice(window._di,1)[0];S.genFields.splice(ti,0,item);window._di=null;renderGen();};
+  updGP();
+}
+function addQF(n){if(S.genFields.some(f=>f.name===n)){showToast(`"${n}" already added`);return;}S.genFields.push({name:n,type:isImg(n)?'image':'text'});renderGen();}
+function addFieldM(){const inp=document.getElementById('newF');const n=inp.value.trim();if(!n){showToast('⚠ Enter a name');return;}if(S.genFields.some(f=>f.name===n)){showToast(`"${n}" already exists`);return;}S.genFields.push({name:n,type:isImg(n)?'image':'text'});inp.value='';renderGen();showToast(`✓ Added "${n}"`);}
+function updGP(){
+  document.getElementById('genPrev').innerHTML=S.genFields.map(f=>{
+    const dn=f.type==='image'&&!f.name.startsWith('@')?'@'+f.name:f.name;
+    const bg=f.type==='image'?'rgba(244,200,66,.1)':f.type==='number'?'rgba(100,116,139,.1)':'rgba(45,212,191,.1)';
+    const cl=f.type==='image'?'var(--gold)':f.type==='number'?'var(--muted)':'var(--teal)';
+    return`<span style="padding:3px 10px;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;background:${bg};color:${cl}">${dn}</span>`;
+  }).join('');
+}
+function genHeaders(){return S.genFields.map(f=>f.type==='image'&&!f.name.startsWith('@')?'@'+f.name:f.name);}
+function dlGenCSV(){
+  if(!S.genFields.length){showToast('⚠ Add fields first');return;}
+  const rows=parseInt(document.getElementById('rowCt').value)||30;
+  const h=genHeaders(); const empty=h.map(()=>'').join(',');
+  const lines=[h.map(qf).join(',')]; for(let i=0;i<rows;i++)lines.push(empty);
+  dl('graduation_program_template.csv',lines.join('\r\n'),'text/csv'); showToast(`✓ Downloaded with ${rows} empty rows`);
+}
+function dlGenSample(){
+  if(!S.genFields.length){showToast('⚠ Add fields first');return;}
+  const h=genHeaders();
+  const sr=S.genFields.map(f=>{const n=f.name.toLowerCase();
+    if(n.includes('first'))return'Jane'; if(n.includes('last'))return'Smith';
+    if(n.includes('name')&&!n.includes('first')&&!n.includes('last'))return'Jane Smith';
+    if(f.type==='image')return'images/student_001.jpg';
+    if(n.includes('gpa'))return'3.85'; if(n.includes('honor')||n.includes('award'))return'National Honor Society';
+    if(n.includes('college')||n.includes('plan'))return'Utah State University';
+    if(n.includes('quote'))return'Dream big, work hard.';
+    if(n.includes('activit'))return'Drama, Soccer, Student Council';
+    return'Sample';});
+  const rows=parseInt(document.getElementById('rowCt').value)||30;
+  const empty=h.map(()=>'').join(',');
+  const lines=[h.map(qf).join(','),sr.map(qf).join(',')];
+  for(let i=1;i<rows;i++)lines.push(empty);
+  dl('graduation_program_template.csv',lines.join('\r\n'),'text/csv'); showToast('✓ Downloaded with sample row!');
+}
+function copyHeaders(){if(!S.genFields.length){showToast('⚠ Add fields first');return;}navigator.clipboard.writeText(genHeaders().join(','));showToast('✓ Headers copied!');}
+
+// ── Mode 4: Clean & Prep ─────────────────────────────────────
+function renderClean(){
+  const s=S.csv4;
+  // Stats
+  const flagged=getFlaggedRows(s);
+  const missingPhoto=s.r.filter(r=>{const pi=s.h.findIndex(h=>isImg(h));return pi>=0&&(!r[pi]||!r[pi].trim());}).length;
+  const dupes=getDupes(s);
+  document.getElementById('sb4').innerHTML=`
+    <div class="stat"><div class="val">${s.r.length}</div><div class="lbl">Students</div></div>
+    <div class="stat ${flagged.length?'sw':'sg'}"><div class="val">${flagged.length}</div><div class="lbl">Incomplete</div></div>
+    <div class="stat ${missingPhoto?'se':'sg'}"><div class="val">${missingPhoto}</div><div class="lbl">Missing Photo</div></div>
+    <div class="stat ${dupes.length?'sw':'sg'}"><div class="val">${dupes.length}</div><div class="lbl">Duplicates</div></div>`;
+  document.getElementById('k-fb').textContent=flagged.length;
+  renderFlagTable(s,flagged);
+  renderPadGrid(s);
+  renderPreviewTable('k-tbl',s,new Set(flagged));
+}
+
+function getFlaggedRows(s){
+  const flagged=[];
+  s.r.forEach((r,i)=>{const missing=s.h.filter((_,ci)=>!r[ci]||!r[ci].trim());if(missing.length>0)flagged.push(i);});
+  return flagged;
+}
+function getDupes(s){
+  const seen=new Map(); const dupes=[];
+  s.r.forEach((r,i)=>{const key=r.slice(0,3).join('|').toLowerCase().trim();if(seen.has(key))dupes.push(i);else seen.set(key,i);});
+  return dupes;
+}
+
+function renderFlagTable(s,flagged){
+  const tbody=flagged.slice(0,50);
+  const imgCi=s.h.findIndex(h=>isImg(h));
+  document.getElementById('k-ftbl').innerHTML=`
+    <thead><tr><th>#</th><th>Name</th><th>Missing Fields</th><th>Photo</th></tr></thead>
+    <tbody>${tbody.map(ri=>{
+      const r=s.r[ri];
+      const name=r.slice(0,2).filter(Boolean).join(' ')||r[0]||`Row ${ri+2}`;
+      const missing=s.h.filter((_,ci)=>!r[ci]||!r[ci].trim());
+      const hasPhoto=imgCi>=0&&r[imgCi]&&r[imgCi].trim();
+      return`<tr style="${!hasPhoto&&imgCi>=0?'background:rgba(244,114,182,.05)':''}">
+        <td style="color:var(--muted)">${ri+2}</td>
+        <td style="font-weight:500">${name}</td>
+        <td>${missing.map(m=>`<span class="flag-pill ${isImg(m)?'fp-photo':'fp-missing'}">${m}</span>`).join('')}</td>
+        <td>${hasPhoto?'<span style="color:var(--green);font-size:11px">✓</span>':'<span class="flag-pill fp-photo">missing</span>'}</td>
+      </tr>`;
+    }).join('')}${flagged.length>50?`<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:10px">…and ${flagged.length-50} more</td></tr>`:''}</tbody>`;
+}
+
+function renderPadGrid(s){
+  document.getElementById('k-padGrid').innerHTML=s.h.map((c,i)=>{
+    const emptyCount=s.r.filter(r=>!r[i]||!r[i].trim()).length;
+    const pct=Math.round(emptyCount/s.r.length*100);
+    const hint=isImg(c)?'images/placeholder.jpg':c.toLowerCase().includes('honor')||c.toLowerCase().includes('award')?'—':c.toLowerCase().includes('gpa')?'N/A':'—';
+    return`<div class="pad-row">
+      <div>
+        <div class="pad-col-name">${c}</div>
+        <div style="font-size:10px;color:${pct>0?'var(--gold)':'var(--green)'}">${emptyCount} empty (${pct}%)</div>
+      </div>
+      <input class="pad-input" id="pad_${i}" value="${S.padValues[c]||''}" placeholder="${hint}" oninput="S.padValues['${c.replace(/'/g,"\\'")}'] = this.value">
+    </div>`;
+  }).join('');
+}
+
+function quickPad(){
+  S.csv4.h.forEach((c,i)=>{
+    if(!S.padValues[c]){
+      if(isImg(c))S.padValues[c]='images/placeholder.jpg';
+      else if(c.toLowerCase().includes('honor')||c.toLowerCase().includes('award'))S.padValues[c]='—';
+      else if(c.toLowerCase().includes('gpa'))S.padValues[c]='N/A';
+      else if(c.toLowerCase().includes('college')||c.toLowerCase().includes('plan'))S.padValues[c]='TBD';
+      else if(c.toLowerCase().includes('quote'))S.padValues[c]='—';
+      else S.padValues[c]='—';
+      const inp=document.getElementById(`pad_${i}`);
+      if(inp)inp.value=S.padValues[c];
+    }
+  });
+  showToast('✨ Default placeholders applied');
+}
+
+function scrollToPad(){switchTab('k-pad','tabs4');}
+
+function parseKIndd(){
+  const txt=document.getElementById('kInddPaste').value.trim();
+  if(!txt){showToast('⚠ Enter field names');return;}
+  S.indd4.length=0;
+  const f=new Set();
+  txt.split(/[\n,]+/).forEach(p=>{let x=p.trim().replace(/^[«<\s]+|[»>\s]+$/g,'').trim();if(x.length>0&&x.length<80)f.add(x);});
+  S.indd4.push(...f);
+  if(!S.indd4.length){showToast('⚠ Could not parse');return;}
+  S.rn4={};S.csv4.h.forEach(h=>{S.rn4[h]=h;});
+  renderKNamesPanel();
+  document.getElementById('k-nameActs').style.display='flex';
+  showToast(`✓ Comparing against ${S.indd4.length} InDesign fields`);
+}
+function applyCloseK(){
+  if(!S.indd4.length)return;let n=0;
+  S.csv4.h.forEach((c,i)=>{const m=matchType(c,S.indd4);if(m.t==='close'&&m.m){S.rn4[c]=m.m;n++;}});
+  renderRenameGrid('k-rgr',S.csv4,S.rn4,S.indd4);
+  showToast(`✨ Staged ${n} rename(s)`);
+}
+function renderKNamesPanel(){
+  const cont=document.getElementById('k-namesContent');
+  const h=S.csv4.h; const cm=h.map(x=>({x,...matchType(x,S.indd4)}));
+  const mi=new Set(cm.filter(m=>m.m).map(m=>m.m));
+  const ui=S.indd4.filter(f=>!mi.has(f));
+  const ex=cm.filter(m=>m.t==='exact').length, cl=cm.filter(m=>m.t==='close').length, no=cm.filter(m=>m.t==='none').length;
+  cont.innerHTML=`
+    <div class="csum" style="margin-bottom:14px">
+      <div class="stat sg"><div class="val">${ex}</div><div class="lbl">Exact</div></div>
+      <div class="stat sw"><div class="val">${cl}</div><div class="lbl">Close</div></div>
+      <div class="stat se"><div class="val">${no+ui.length}</div><div class="lbl">Missing</div></div>
+    </div>
+    <div class="cgrid">
+      <div class="ccol"><div class="cct c-pink">📊 CSV (${h.length})</div>${cm.map(m=>`<div class="cf ${m.t==='exact'?'cm':m.t==='close'?'cc':'cx'}"><span class="cfn">${m.x}</span><span class="cft ${m.t==='exact'?'tm':m.t==='close'?'tc':'tn'}">${m.t==='exact'?'✓':m.t==='close'?'≈':'✗'}</span></div>`).join('')}</div>
+      <div class="ccol"><div class="cct c-teal">🖨️ InDesign (${S.indd4.length})</div>${S.indd4.map(f=>{const im=mi.has(f);const ic=cm.some(m=>m.t==='close'&&m.m===f);return`<div class="cf ${im?(ic?'cc':'cm'):'cx'}"><span class="cfn">${f}</span><span class="cft ${im?(ic?'tc':'tm'):'tn'}">${im?(ic?'≈':'✓'):'✗'}</span></div>`;}).join('')}</div>
+    </div>
+    <div class="hdiv"></div>
+    <div class="stitle">Rename CSV columns</div>
+    <div class="rgrid" id="k-rgr"></div>`;
+  renderRenameGrid('k-rgr',S.csv4,S.rn4,S.indd4);
+}
+
+// ── Downloads ────────────────────────────────────────────────
+function dlFixed(mode){
+  const s=mode===1?S.csv1:mode===2?S.csv2:S.csv4;
+  const rn=mode===1?S.rn1:mode===2?S.rn2:S.rn4;
+  const newH=s.h.map(h=>rn[h]||h);
+  const lines=[newH.map(qf).join(',')];
+  s.r.forEach(r=>{const p=[...r];while(p.length<s.h.length)p.push('');lines.push(p.map(qf).join(','));});
+  dl('graduation_fixed.csv',lines.join('\r\n'),'text/csv');showToast('✓ Fixed CSV downloaded!');
+}
+function dlFlagged(){
+  const s=S.csv4; const flagged=new Set(getFlaggedRows(s));
+  // Add a "Flags" column
+  const newH=[...s.h,'_flags'];
+  const lines=[newH.map(qf).join(',')];
+  s.r.forEach((r,i)=>{
+    const p=[...r];while(p.length<s.h.length)p.push('');
+    const missing=s.h.filter((_,ci)=>!r[ci]||!r[ci].trim());
+    p.push(missing.length?`INCOMPLETE: ${missing.join(', ')}`:'OK');
+    lines.push(p.map(qf).join(','));
+  });
+  dl('graduation_flagged.csv',lines.join('\r\n'),'text/csv');showToast('✓ Flagged CSV downloaded!');
+}
+function dlPadded(){
+  const s=S.csv4;
+  const lines=[s.h.map(qf).join(',')];
+  s.r.forEach(r=>{
+    const p=s.h.map((c,i)=>{
+      const v=r[i]||'';
+      return v.trim()?v:(S.padValues[c]||'');
+    });
+    lines.push(p.map(qf).join(','));
+  });
+  dl('graduation_padded.csv',lines.join('\r\n'),'text/csv');showToast('✓ Padded CSV downloaded!');
+}
+function autoFix(mode){
+  const s=mode===1?S.csv1:S.csv2;const rn=mode===1?S.rn1:S.rn2;
+  s.h.forEach((c,i)=>{const f=suggestRename(c);rn[c]=f;const inp=document.getElementById(`${mode===1?'v':'c'}-rgr_r${i}`);if(inp)inp.value=f;});
+  showToast('✨ Auto-fix applied');
+}
+
+// ── Shared utilities ─────────────────────────────────────────
+function qf(v){if(!v)return'';if(/[,"\r\n]/.test(v))return`"${v.replace(/"/g,'""')}"`;return v;}
+function dl(name,content,type){const b=new Blob([content],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();}
+
+// Tab wiring
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',function(){
+    const container=this.closest('.wf');
+    container.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    container.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    this.classList.add('on');
+    const p=document.getElementById('panel-'+this.dataset.p);
+    if(p)p.classList.add('on');
+  });
+});
+function switchTab(name,tabsId){
+  const tabs=document.getElementById(tabsId);
+  if(!tabs)return;
+  tabs.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  const t=tabs.querySelector(`[data-p="${name}"]`);if(t)t.classList.add('on');
+  const p=document.getElementById('panel-'+name);if(p)p.classList.add('on');
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+setMode(1);
+</script>
+</body>
+</html>

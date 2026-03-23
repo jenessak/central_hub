@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jenny's App Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sage: #A1BE95;
+    --sage-light: #d6e8d0;
+    --sage-dark: #6a9160;
+    --bluebell: #92AAC7;
+    --bluebell-light: #ccdaeb;
+    --raspberry: #ED5752;
+    --raspberry-light: #fde8e7;
+    --honeydew: #E2DFA2;
+    --honeydew-light: #f5f3d4;
+    --cream: #FBF7EE;
+    --ink: #2a2720;
+    --ink-mid: #5a554e;
+    --ink-light: #9a9590;
+    --border: rgba(42,39,32,0.1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 120%, rgba(161,190,149,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% -10%, rgba(146,170,199,0.2) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--sage-dark);
+    margin-bottom: 1rem;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.8rem, 7vw, 5rem);
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--sage-dark);
+  }
+
+  .hero-sub {
+    font-size: 1.05rem;
+    color: var(--ink-mid);
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+  }
+
+  .pill-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 3.5rem;
+  }
+
+  .pill {
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1.5px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .pill:hover { transform: translateY(-1px); }
+  .pill.all    { border-color: var(--ink); color: var(--ink); }
+  .pill.all.active { background: var(--ink); color: var(--cream); }
+  .pill.personal { border-color: var(--sage-dark); color: var(--sage-dark); }
+  .pill.personal.active { background: var(--sage-dark); color: white; }
+  .pill.teaching { border-color: var(--bluebell); color: #5577a0; }
+  .pill.teaching.active { background: var(--bluebell); color: white; }
+  .pill.tools { border-color: var(--raspberry); color: var(--raspberry); }
+  .pill.tools.active { background: var(--raspberry); color: white; }
+
+  /* ── GRID ────────────────────────────────────────────── */
+  .grid-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem 6rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+
+  /* ── CARD ────────────────────────────────────────────── */
+  .card {
+    background: white;
+    border-radius: 18px;
+    border: 1.5px solid var(--border);
+    padding: 1.6rem 1.75rem 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--card-accent, var(--sage));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(42,39,32,0.1);
+    border-color: var(--card-accent, var(--sage));
+  }
+
+  .card:hover::after { transform: scaleX(1); }
+
+  .card-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--card-icon-bg, var(--sage-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .card-title-block {}
+
+  .card-tag {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--card-tag-color, var(--sage-dark));
+    margin-bottom: 0.15rem;
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .card-desc {
+    font-size: 0.875rem;
+    color: var(--ink-mid);
+    line-height: 1.6;
+    font-weight: 300;
+    flex: 1;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.25rem;
+  }
+
+  .card-status {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: var(--card-status-bg, var(--sage-light));
+    color: var(--card-status-color, var(--sage-dark));
+  }
+
+  .card-arrow {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--card-icon-bg, var(--sage-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .card:hover .card-arrow {
+    background: var(--card-accent, var(--sage));
+    transform: translate(2px,-2px);
+  }
+  .card:hover .card-arrow svg { stroke: white; }
+
+  .card[data-cat="personal"] { --card-accent: var(--sage); --card-icon-bg: var(--sage-light); --card-tag-color: var(--sage-dark); --card-status-bg: var(--sage-light); --card-status-color: var(--sage-dark); }
+  .card[data-cat="teaching"] { --card-accent: var(--bluebell); --card-icon-bg: var(--bluebell-light); --card-tag-color: #5577a0; --card-status-bg: var(--bluebell-light); --card-status-color: #5577a0; }
+  .card[data-cat="tools"]    { --card-accent: var(--raspberry); --card-icon-bg: var(--raspberry-light); --card-tag-color: #c0382f; --card-status-bg: var(--raspberry-light); --card-status-color: #c0382f; }
+
+  .card.hidden { display: none; }
+
+  /* ── SECTION DIVIDER ─────────────────────────────────── */
+  .section-label {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    color: var(--ink);
+    margin: 2.5rem 0 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  /* ── FOOTER ──────────────────────────────────────────── */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.8rem;
+    color: var(--ink-light);
+    border-top: 1.5px solid var(--border);
+  }
+
+  /* ── PLACEHOLDER NOTICE ──────────────────────────────── */
+  .card .placeholder {
+    font-size: 0.72rem;
+    color: var(--raspberry);
+    font-style: italic;
+  }
+
+  @media (max-width: 600px) {
+    .hero { padding: 3.5rem 1.25rem 2.5rem; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <p class="hero-eyebrow">Jenny K. &nbsp;·&nbsp; App Hub</p>
+  <h1>All your apps,<br><em>one place.</em></h1>
+  <p class="hero-sub">A launchpad for every tool and web app built for teaching, planning, and personal life.</p>
+
+  <div class="pill-bar">
+    <button class="pill all active" onclick="filter('all')">All apps</button>
+    <button class="pill personal" onclick="filter('personal')">Personal</button>
+    <button class="pill teaching" onclick="filter('teaching')">Teaching</button>
+    <button class="pill tools" onclick="filter('tools')">Tools</button>
+  </div>
+</header>
+
+<!-- GRID -->
+<main class="grid-wrap">
+  <div class="grid" id="grid">
+
+    <!-- ══ PERSONAL ══════════════════════════════════ -->
+
+    <a href="#" class="card" data-cat="personal">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6a9160" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="card-title-block">
+          <p class="card-tag">Personal</p>
+          <p class="card-title">Recipe Manager</p>
+        </div>
+      </div>
+      <p class="card-desc">Full-featured recipe app with Firebase sync, Spoonacular import, meal planner, pantry tracker, and grocery list.</p>
+      <div class="card-footer">
+        <span class="card-status">Firebase + Spoonacular</span>
+        <span class="card-arrow"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#6a9160" stroke-width="2" stroke-linecap="round"><path d="M2 11L11 2M11 2H5M11 2v6"/></svg></span>
+      </div>
+      <p class="placeholder">↑ Replace href="#" with your app URL</p>
+    </a>
+
+    <a href="#" class="card" data-cat="personal">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6a9160" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="18" rx="2"/><path d="M8 21V3"/><path d="M12 7h4"/><path d="M12 11h4"/><path d="M12 15h4"/>
+          </svg>
+        </div>
+        <div class="card-title-block">
+          <p class="card-tag">Personal</p>
+          <p class="card-title">Finance Manager</p>
+        </div>
+      </div>
+      <p class="card-desc">Encrypted personal finance tracker with bills, savings, retirement, income, HSA, doctors, and yearly overview. AES-256 protected.</p>
+      <div class="card-footer">
+        <span class="card-status">AES-256 Encrypted</span>
+        <span class="card-arrow"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#6a9160" stroke-width="2" stroke-linecap="round"><path d="M2 11L11 2M11 2H5M11 2v6"/></svg></span>
+      </div>
+      <p class="placeholder">↑ Replace href="#" with your app URL</p>
+    </a>
+
+    <a href="#" class="card" data-cat="personal">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6a9160" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+          </svg>
+        </div>
+        <div class="card-title-block">
+          <p class="card-tag">Personal</p>
+          <p class="card-title">FitFlow</p>
+        </div>
+      </div>
+      <p class="card-desc">Exercise planner with video library, custom categories, routine builder, and drag-and-drop workout queue.</p>
+      <div class="card-footer">
+        <span class="card-status">LocalStorage</span>
+        <span class="card-arrow"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#6a9160" stroke-width="2" stroke-linecap="round"><path d="M2 11L11 2M11 2H5M11 2v6"/></svg></span>
+      </div>
+      <p class="placeholder">↑ Replace href="#" with your app URL</p>
+    </a>
+
+    <a href="#" class="card" data-cat="personal">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6a9160" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+          </svg>
+        </div>
+        <div class="card-title-block">
+          <p class="card-tag">Personal</p>
+          <p class="card-title">TaskFlow</p>
+        </div>
+      </div>
+      <p class="card-desc">Multi-list task manager with subtasks, recurring tasks, calendar view, quick links, and Firebase cross-device sync.</p>
+      <div class="card-footer">
+        <span class="card-status">Firebase Sync</span>
+        <span class="card-arrow"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#6a9160" stroke-width="2" stroke-linecap="round"><path d="M2 11L11 2M11 2H5M11 2v6"/></svg></span>
+      </div>
+      <p class="placeholder">↑ Replace href="#" with your app URL</p>
+    </a>
+
+    <!-- ══ TEACHING ════════════════════════════════ -->
+
+    <a href="#" class="card" data-cat="teaching">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#5577a0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+          </svg>
+        </div>
+        <div class="card-title-block">
+          <p class="card-tag">Teaching</p>
+          <p class="card-title">Course Planner</p>
+        </div>
+      </div>
+      <p class="card-desc">17-week multi-course grid with drag-and-drop topics, no-class days, shift-weeks, and Firebase sync. Built for IxD 1200.</p>
+      <div class="card-footer">
+        <span class="card-status">Firebase + LocalStorage</span>
+        <span class="card-arrow"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#5577a0" stroke-width="2" stroke-linecap="round"><path d="M2 11L11 2M11 2H5M11 2v6"/></svg></span>
+      </div>
+      <p class="placeholder">↑ Replace href="#" with your app URL</p>
+    </a>
+
+    <a href="#" class="card" data-cat="teaching">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#5577a0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+        </div>
+        <div class="card-title-block">
+          <p class="card-tag">Teaching</p>
+          <p class="card-title">Career Launch</p>
+        </div>
+      </div>
+      <p class="card-desc">Internship &amp; career readiness course — resumes, cover letters, LinkedIn, portfolios, weekly check-ins, and employer prep for all tracks.</p>
+      <div class="card-footer">
+        <span class="card-status">Canvas Course</span>
+        <span class="card-arrow"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#5577a0" stroke-width="2" stroke-linecap="round"><path d="M2 11L11 2M11 2H5M11 2v6"/></svg></span>
+      </div>
+      <p class="placeholder">↑ Replace href="#" with your app URL</p>
+    </a>
+
+    <!-- ══ TOOLS ══════════════════════════════════ -->
+
+    <a href="#" class="card" data-cat="tools">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#c0382f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/>
+          </svg>
+        </div>
+        <div class="card-title-block">
+          <p class="card-tag">Tool</p>
+          <p class="card-title">ImageForge</p>
+        </div>
+      </div>
+      <p class="card-desc">Standalone image optimizer with batch rename, group tagging, DPI controls, preset system, and ZIP export. Single HTML file.</p>
+      <div class="card-footer">
+        <span class="card-status">Self-contained HTML</span>
+        <span class="card-arrow"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#c0382f" stroke-width="2" stroke-linecap="round"><path d="M2 11L11 2M11 2H5M11 2v6"/></svg></span>
+      </div>
+      <p class="placeholder">↑ Replace href="#" with your app URL</p>
+    </a>
+
+    <a href="#" class="card" data-cat="tools">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#c0382f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </div>
+        <div class="card-title-block">
+          <p class="card-tag">Tool</p>
+          <p class="card-title">CSV Validator</p>
+        </div>
+      </div>
+      <p class="card-desc">Graduation program CSV validator for Adobe InDesign Data Merge — validate, compare, clean, and generate CSV files.</p>
+      <div class="card-footer">
+        <span class="card-status">Self-contained HTML</span>
+        <span class="card-arrow"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#c0382f" stroke-width="2" stroke-linecap="round"><path d="M2 11L11 2M11 2H5M11 2v6"/></svg></span>
+      </div>
+      <p class="placeholder">↑ Replace href="#" with your app URL</p>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  &copy; 2026 Jenny K. &nbsp;·&nbsp; <a href="https://jenessak.com" style="color:var(--sage-dark);text-decoration:none;">jenessak.com</a>
+</footer>
+
+<script>
+  function filter(cat) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    document.querySelector('.pill.' + (cat === 'all' ? 'all' : cat)).classList.add('active');
+    document.querySelectorAll('.card').forEach(card => {
+      if (cat === 'all' || card.dataset.cat === cat) {
+        card.classList.remove('hidden');
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+  }
+</script>
+</body>
+</html>

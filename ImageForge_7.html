@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ImageForge</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23f5c842'/%3E%3Cstop offset='100%25' stop-color='%23e56c20'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='18,4 8,18 16,18 15,28 24,14 16,14' fill='%230f0f0a'/%3E%3C/svg%3E"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#111113;color:#e4e2db;font-family:'DM Sans',sans-serif;min-height:100vh}
+button{font-family:'DM Sans',sans-serif;cursor:pointer}
+input:focus{outline:none}
+svg{display:inline-block;vertical-align:middle;flex-shrink:0}
+
+/* TOP BAR */
+#topbar{background:#0d0d0f;border-bottom:1px solid #1e1e24;padding:13px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
+#logo{width:34px;height:34px;background:linear-gradient(135deg,#f5c842,#e56c20);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#appname{font-weight:600;font-size:15px;letter-spacing:-0.4px}
+#appsub{font-size:10px;color:#555;font-family:'DM Mono',monospace;letter-spacing:.5px}
+#tabs{margin-left:auto;display:flex;gap:6px;background:#18181c;border:1px solid #1e1e24;border-radius:10px;padding:4px}
+.tbtn{padding:8px 16px;border-radius:7px;border:none;font-size:13px;font-weight:500;transition:all .15s;background:transparent;color:#666;display:flex;align-items:center;gap:7px}
+.tbtn:hover{color:#aaa}
+.tbtn.active{background:linear-gradient(135deg,#f5c842,#e56c20);color:#0f0f0a;font-weight:600}
+.tbtn.active svg{stroke:#0f0f0a}
+.tbtn svg{stroke:#666;transition:stroke .15s}
+.tbtn:hover svg{stroke:#aaa}
+
+/* MAIN */
+#main{max-width:1180px;margin:0 auto;padding:28px 20px}
+.page{display:none}
+.page.active{display:block}
+
+/* DROPZONE */
+.dz{border:2px dashed #252530;border-radius:16px;min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:#13131a;gap:12px;user-select:none}
+.dz:hover,.dz.over{border-color:#f5c842;background:rgba(245,200,66,.04)}
+.dz svg{stroke:#333;transition:stroke .2s}
+.dz:hover svg,.dz.over svg{stroke:#f5c842}
+.dz-title{font-size:20px;font-weight:500;letter-spacing:-.5px;margin-top:4px}
+.dz-sub{font-size:13px;color:#555}
+.dz-cta{padding:10px 22px;background:#1c1c22;border:1px solid #2e2e38;border-radius:8px;font-size:13px;color:#888;font-weight:500;pointer-events:none;display:flex;align-items:center;gap:7px}
+.dz-cta svg{stroke:#666}
+
+/* FORMS */
+.lbl{display:block;font-size:10px;color:#6b6b70;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
+.inp{background:#18181c;border:1px solid #2c2c32;border-radius:7px;color:#e4e2db;padding:9px 11px;font-size:13px;font-family:'DM Mono',monospace;width:100%;transition:border-color .15s}
+.inp:focus{border-color:#f5c842}
+input[type=number]::-webkit-inner-spin-button{opacity:.3}
+
+/* BUTTONS */
+.btn-pri{width:100%;padding:12px;background:linear-gradient(135deg,#f5c842,#e56c20);border:none;border-radius:10px;color:#0f0f0a;font-weight:700;font-size:14px;letter-spacing:-.2px;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-pri:hover{opacity:.9}
+.btn-pri:disabled{background:#1c1c22;color:#555;cursor:not-allowed;opacity:1}
+.btn-pri:disabled svg{stroke:#555}
+.btn-pri svg{stroke:#0f0f0a}
+.btn-sec{width:100%;padding:11px;background:transparent;border:1px solid #f5c842;border-radius:10px;color:#f5c842;font-weight:600;font-size:13px;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-sec:hover{background:rgba(245,200,66,.07)}
+.btn-sec svg{stroke:#f5c842}
+.link-btn{background:none;border:none;color:#555;font-size:12px;text-decoration:underline;cursor:pointer;padding:0;margin-top:10px;display:flex;align-items:center;gap:5px}
+.link-btn svg{stroke:#555}
+.link-btn:hover{color:#aaa}
+.link-btn:hover svg{stroke:#aaa}
+
+/* OPTIMIZER LAYOUT */
+#opt-wrap{display:grid;grid-template-columns:1fr 340px;gap:32px}
+#opt-sidebar{border-left:1px solid #1e1e24;padding-left:28px;display:flex;flex-direction:column;gap:20px}
+.img-pair{display:grid;gap:14px;margin-bottom:14px}
+.img-pair.one{grid-template-columns:1fr}
+.img-pair.two{grid-template-columns:1fr 1fr}
+.img-box{background:#0d0d0f;border-radius:11px;border:1px solid #1e1e24;overflow:hidden;min-height:180px;display:flex;align-items:center;justify-content:center}
+.img-box.gold{border-color:#2d2a1a}
+.img-box img{width:100%;max-height:360px;object-fit:contain;display:block}
+.img-lbl{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.img-lbl svg{stroke:#555}
+.img-lbl.gold{color:#f5c842}
+.img-lbl.gold svg{stroke:#f5c842}
+.img-meta{margin-top:6px;font-size:11px;color:#555;font-family:'DM Mono',monospace}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.stat{background:#13131a;border:1px solid #1e1e24;border-radius:10px;padding:12px 14px}
+.stat.hl{border-color:#3a3010}
+.stat-lbl{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.stat-lbl svg{stroke:#555}
+.stat-val{font-size:17px;font-weight:600;color:#d8d5cc;font-family:'DM Mono',monospace}
+.stat.hl .stat-val{color:#f5c842}
+.fmt-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.fmt-btn{padding:9px;border-radius:8px;border:1px solid #2c2c32;background:#18181c;color:#666;font-family:'DM Mono',monospace;font-size:12px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.fmt-btn svg{stroke:#666;transition:stroke .15s}
+.fmt-btn:hover{border-color:#444;color:#aaa}
+.fmt-btn:hover svg{stroke:#aaa}
+.fmt-btn.on{border-color:#f5c842;background:rgba(245,200,66,.07);color:#f5c842;font-weight:600}
+.fmt-btn.on svg{stroke:#f5c842}
+.fmt-note{font-size:11px;color:#444;line-height:1.5;margin-top:6px;display:flex;align-items:flex-start;gap:5px}
+.fmt-note svg{stroke:#444;margin-top:1px;flex-shrink:0}
+.dim-row{display:flex;align-items:flex-end;gap:8px;margin-bottom:8px}
+.dim-col{flex:1}
+.dim-sub{font-size:9px;color:#555;font-family:'DM Mono',monospace;margin-bottom:3px}
+.dim-x{color:#444;font-size:16px;padding-bottom:9px}
+.file-row{display:flex}
+.file-ext{padding:9px 10px;background:#1c1c22;border:1px solid #2c2c32;border-left:none;border-radius:0 7px 7px 0;font-size:12px;color:#555;font-family:'DM Mono',monospace;white-space:nowrap}
+.size-card{background:#0d0d0f;border:1px solid #1e1e24;border-radius:10px;padding:14px 16px}
+.size-card-lbl{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.size-card-lbl svg{stroke:#555}
+.size-card-val{font-size:22px;font-weight:600;color:#f5c842;font-family:'DM Mono',monospace}
+.size-card-sub{font-size:11px;color:#444;margin-top:4px}
+.preset-list{display:flex;flex-direction:column;gap:6px}
+.preset-btn{padding:9px 13px;background:#13131a;border:1px solid #1e1e24;border-radius:8px;color:#777;font-size:12px;text-align:left;display:flex;align-items:center;justify-content:space-between;transition:all .15s;width:100%}
+.preset-btn:hover{border-color:#2e2e38;color:#ccc}
+.preset-btn-left{display:flex;align-items:center;gap:8px}
+.preset-btn-left svg{stroke:#555;transition:stroke .15s}
+.preset-btn:hover .preset-btn-left svg{stroke:#888}
+.preset-tag{font-family:'DM Mono',monospace;color:#444;font-size:11px}
+.aspect-check{display:flex;align-items:center;gap:7px;font-size:12px;color:#555;cursor:pointer;user-select:none}
+
+/* RESOLUTION */
+.dpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.dpi-btn{padding:8px 4px;border-radius:8px;border:1px solid #2c2c32;background:#18181c;color:#666;font-family:'DM Mono',monospace;font-size:11px;transition:all .15s;text-align:center;line-height:1.3}
+.dpi-btn:hover{border-color:#444;color:#aaa}
+.dpi-btn.on{border-color:#f5c842;background:rgba(245,200,66,.07);color:#f5c842;font-weight:600}
+.dpi-sub{font-size:9px;color:inherit;opacity:.7;display:block;margin-top:1px}
+.dpi-custom-row{display:flex;align-items:center;gap:8px}
+.dpi-custom-row .inp{flex:1}
+.dpi-custom-row span{font-size:12px;color:#555;white-space:nowrap;font-family:'DM Mono',monospace}
+
+/* SHUFFLE LAYOUT */
+#shuf-wrap{display:grid;grid-template-columns:1fr 320px;gap:28px}
+#shuf-sidebar{border-left:1px solid #1e1e24;padding-left:24px;display:flex;flex-direction:column;gap:20px}
+.shuf-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.shuf-count{font-size:12px;color:#555;display:flex;align-items:center;gap:6px}
+.shuf-count b{color:#e4e2db;font-weight:600}
+.shuf-count .stag{color:#f5c842;margin-left:4px;display:flex;align-items:center;gap:4px}
+.shuf-count .stag svg{stroke:#f5c842}
+.shuf-btns{display:flex;gap:8px}
+.sm-btn{padding:6px 12px;background:#1c1c22;border:1px solid #2e2e38;border-radius:7px;color:#888;font-size:12px;display:flex;align-items:center;gap:6px;transition:all .15s}
+.sm-btn svg{stroke:#888;transition:stroke .15s}
+.sm-btn:hover{color:#ccc;border-color:#444}
+.sm-btn:hover svg{stroke:#ccc}
+.sm-ghost{background:none;border-color:#2a2a30;color:#555}
+.sm-ghost svg{stroke:#555}
+.sm-ghost:hover{color:#aaa;border-color:#3a3a44}
+.sm-ghost:hover svg{stroke:#aaa}
+
+/* GROUP BADGES */
+#group-bar{margin-bottom:16px}
+.group-bar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.group-bar-lbl{font-size:10px;color:#6b6b70;text-transform:uppercase;letter-spacing:1px;font-weight:600;display:flex;align-items:center;gap:6px}
+.group-bar-lbl svg{stroke:#6b6b70}
+.group-pills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.gpill{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:20px;border:1px solid transparent;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+.gpill.selected{opacity:1}
+.gpill:not(.selected){opacity:.55;filter:grayscale(.4)}
+.gpill:hover{opacity:.9}
+.gpill svg{flex-shrink:0}
+.gpill-add{background:#18181c;border:1px dashed #2c2c32;color:#555;border-radius:20px;padding:6px 12px;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:all .15s}
+.gpill-add svg{stroke:#555;transition:stroke .15s}
+.gpill-add:hover{border-color:#f5c842;color:#f5c842}
+.gpill-add:hover svg{stroke:#f5c842}
+.group-filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gfilter{padding:5px 11px;border-radius:6px;border:1px solid #1e1e24;background:#13131a;color:#666;font-size:11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.gfilter svg{stroke:#666;transition:stroke .15s}
+.gfilter:hover,.gfilter.on{border-color:#333;color:#bbb}
+.gfilter:hover svg,.gfilter.on svg{stroke:#bbb}
+.gfilter.on{background:#1c1c22}
+
+/* GROUP MODAL */
+#group-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center}
+#group-modal.open{display:flex}
+#group-modal-box{background:#18181c;border:1px solid #2c2c32;border-radius:16px;padding:28px;width:420px;max-width:90vw}
+#gm-title{font-size:15px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+#gm-title svg{stroke:#f5c842}
+.gm-row{margin-bottom:16px}
+.gm-icon-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-top:8px}
+.gm-icon-opt{width:38px;height:38px;border-radius:8px;border:1px solid #2c2c32;background:#111113;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.gm-icon-opt svg{stroke:#555;transition:stroke .15s}
+.gm-icon-opt:hover{border-color:#444}
+.gm-icon-opt:hover svg{stroke:#ccc}
+.gm-icon-opt.sel{border-color:#f5c842;background:rgba(245,200,66,.07)}
+.gm-icon-opt.sel svg{stroke:#f5c842}
+.gm-color-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.gm-color-opt{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.gm-color-opt:hover{transform:scale(1.15)}
+.gm-color-opt.sel{border-color:#fff;transform:scale(1.1)}
+.gm-actions{display:flex;gap:10px;margin-top:22px}
+.gm-save{flex:1;padding:10px;background:linear-gradient(135deg,#f5c842,#e56c20);border:none;border-radius:8px;color:#0f0f0a;font-weight:700;font-size:13px;cursor:pointer}
+.gm-cancel{padding:10px 18px;background:none;border:1px solid #2c2c32;border-radius:8px;color:#666;font-size:13px;cursor:pointer}
+.gm-cancel:hover{border-color:#444;color:#aaa}
+.gm-delete{padding:10px 14px;background:none;border:1px solid #3a1a1a;border-radius:8px;color:#c04040;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.gm-delete svg{stroke:#c04040}
+.gm-delete:hover{background:rgba(192,64,64,.08)}
+
+/* THUMB GRID */
+.thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.tcard{background:#0d0d0f;border:1px solid #1e1e24;border-radius:10px;overflow:hidden;cursor:grab;position:relative;transition:border-color .15s,opacity .15s}
+.tcard:active{cursor:grabbing}
+.tcard.over{border-color:#f5c842}
+.tcard.dragging{opacity:.35}
+.tcard img{width:100%;height:82px;object-fit:cover;display:block}
+.tcard-info{padding:6px 7px}
+.tcard-new{font-size:9px;color:#f5c842;font-family:'DM Mono',monospace;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tcard-orig{font-size:9px;color:#444;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tcard-rm{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.75);border:none;color:#888;display:flex;align-items:center;justify-content:center;transition:all .1s;padding:0}
+.tcard-rm svg{stroke:#888;transition:stroke .1s}
+.tcard-rm:hover{background:rgba(0,0,0,.92)}
+.tcard-rm:hover svg{stroke:#fff}
+.tcard-badge{position:absolute;top:5px;left:5px;border-radius:5px;padding:2px 6px;font-size:9px;font-weight:600;display:flex;align-items:center;gap:3px;cursor:pointer;transition:opacity .15s}
+.tcard-badge svg{flex-shrink:0}
+.tcard-badge:hover{opacity:.8}
+.tcard-assign{position:absolute;bottom:0;left:0;right:0;background:rgba(13,13,15,.92);border-top:1px solid #1e1e24;padding:5px;display:none;flex-wrap:wrap;gap:4px;z-index:5}
+.tcard-assign.open{display:flex}
+.assign-pill{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:500;cursor:pointer;border:1px solid transparent;display:flex;align-items:center;gap:4px;transition:opacity .15s}
+.assign-pill svg{flex-shrink:0}
+.assign-pill:hover{opacity:.8}
+.assign-none{background:#18181c;border-color:#2c2c32;color:#666;font-size:10px}
+.assign-none svg{stroke:#666}
+
+/* NAME PREVIEW */
+.name-preview{background:#0d0d0f;border:1px solid #1e1e24;border-radius:10px;padding:12px 14px}
+.np-lbl{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.np-lbl svg{stroke:#555}
+.np-row{font-size:11px;font-family:'DM Mono',monospace;display:flex;gap:6px;margin-bottom:4px;align-items:center}
+.np-num{color:#3a3a42;min-width:18px}
+.np-name{color:#f5c842;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.np-more{font-size:11px;color:#444;font-family:'DM Mono',monospace}
+.np-badge{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.hint{font-size:11px;color:#3a3a42;margin-top:10px;display:flex;align-items:center;gap:5px}
+.hint svg{stroke:#3a3a42}
+.success{font-size:12px;color:#5cb85c;text-align:center;padding:9px;background:rgba(92,184,92,.08);border:1px solid rgba(92,184,92,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:7px}
+.success svg{stroke:#5cb85c}
+
+@media(max-width:720px){
+  #opt-wrap,#shuf-wrap,#batch-wrap{grid-template-columns:1fr}
+  #opt-sidebar,#shuf-sidebar,#batch-sidebar{border-left:none;border-top:1px solid #1e1e24;padding-left:0;padding-top:24px}
+  .stats{grid-template-columns:1fr 1fr}
+  .img-pair.two{grid-template-columns:1fr}
+  .tbtn span{display:none}
+}
+
+/* PRESETS PANEL */
+#presets-bar{background:#0d0d0f;border-bottom:1px solid #1e1e24;padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.presets-lbl{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.presets-lbl svg{stroke:#555}
+.preset-chips{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+.pchip{padding:6px 13px;border-radius:20px;border:1px solid #2a2a30;background:#18181c;color:#777;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.pchip svg{stroke:#777;transition:stroke .15s;flex-shrink:0}
+.pchip:hover{border-color:#3a3a42;color:#bbb}
+.pchip:hover svg{stroke:#bbb}
+.pchip.active{border-color:#f5c842;background:rgba(245,200,66,.1);color:#f5c842;font-weight:600}
+.pchip.active svg{stroke:#f5c842}
+.pchip-save{border-style:dashed;color:#555;background:none}
+.pchip-save svg{stroke:#555}
+.pchip-save:hover{border-color:#f5c842;color:#f5c842}
+.pchip-save:hover svg{stroke:#f5c842}
+.pchip-rm{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:inherit;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;line-height:1;flex-shrink:0}
+.pchip-rm:hover{background:rgba(255,80,80,.25);color:#ff5050}
+
+/* PRESET SAVE MODAL */
+#preset-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center}
+#preset-modal.open{display:flex}
+#preset-modal-box{background:#18181c;border:1px solid #2c2c32;border-radius:14px;padding:24px;width:360px;max-width:90vw}
+#pm-title{font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:7px}
+#pm-title svg{stroke:#f5c842}
+#pm-summary{background:#111113;border:1px solid #1e1e24;border-radius:8px;padding:10px 12px;font-size:11px;font-family:'DM Mono',monospace;color:#666;margin-bottom:16px;line-height:1.7}
+.pm-actions{display:flex;gap:8px;margin-top:16px}
+.pm-save{flex:1;padding:10px;background:linear-gradient(135deg,#f5c842,#e56c20);border:none;border-radius:8px;color:#0f0f0a;font-weight:700;font-size:13px;cursor:pointer}
+.pm-cancel{padding:10px 16px;background:none;border:1px solid #2c2c32;border-radius:8px;color:#666;font-size:13px;cursor:pointer}
+.pm-cancel:hover{border-color:#444;color:#aaa}
+
+/* BATCH PAGE */
+#batch-wrap{display:grid;grid-template-columns:1fr 340px;gap:32px}
+#batch-sidebar{border-left:1px solid #1e1e24;padding-left:28px;display:flex;flex-direction:column;gap:20px}
+#batch-drop{min-height:220px}
+.batch-file-list{margin-top:14px}
+.batch-list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.batch-list-title{font-size:12px;color:#888;display:flex;align-items:center;gap:6px}
+.batch-list-title svg{stroke:#888}
+.batch-list-title b{color:#e4e2db}
+.batch-grid{display:flex;flex-direction:column;gap:4px;max-height:380px;overflow-y:auto;padding-right:4px}
+.batch-grid::-webkit-scrollbar{width:4px}
+.batch-grid::-webkit-scrollbar-track{background:#111}
+.batch-grid::-webkit-scrollbar-thumb{background:#2a2a30;border-radius:4px}
+.brow{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#13131a;border:1px solid #1e1e24;border-radius:8px;transition:border-color .15s}
+.brow.processing{border-color:#2a2a1a}
+.brow.done{border-color:#1a2a1a}
+.brow.error{border-color:#2a1a1a}
+.brow-thumb{width:36px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;background:#0d0d0f}
+.brow-info{flex:1;min-width:0}
+.brow-name{font-size:12px;color:#e4e2db;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow-meta{font-size:10px;color:#555;font-family:'DM Mono',monospace;margin-top:2px}
+.brow-status{flex-shrink:0;display:flex;align-items:center;gap:5px;font-size:11px}
+.brow-status.idle{color:#444}
+.brow-status.processing{color:#f5c842}
+.brow-status.done{color:#5cb85c}
+.brow-status.error{color:#e05252}
+.brow-status svg{flex-shrink:0}
+.batch-progress-bar{height:3px;background:#1e1e24;border-radius:2px;margin-top:14px;overflow:hidden}
+.batch-progress-fill{height:100%;background:linear-gradient(90deg,#f5c842,#e56c20);border-radius:2px;transition:width .3s;width:0%}
+.batch-summary{margin-top:12px;font-size:12px;color:#555;display:flex;align-items:center;gap:6px}
+.batch-summary svg{stroke:#555}
+.batch-summary b{color:#e4e2db}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div id="logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f0f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+  </div>
+  <div>
+    <div id="appname">ImageForge</div>
+    <div id="appsub">OPTIMIZE · CONVERT · SHUFFLE &amp; RENAME</div>
+  </div>
+  <div id="tabs">
+    <button class="tbtn active" id="tab-opt-btn" onclick="showTab('opt')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>Optimizer</span>
+    </button>
+    <button class="tbtn" id="tab-shuf-btn" onclick="showTab('shuf')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+      <span>Shuffle &amp; Rename</span>
+    </button>
+    <button class="tbtn" id="tab-batch-btn" onclick="showTab('batch')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><polyline points="9 13 12 16 15 13"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+      <span>Batch Export</span>
+    </button>
+  </div>
+</div>
+
+<!-- PRESETS BAR -->
+<div id="presets-bar">
+  <div class="presets-lbl">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+    Presets
+  </div>
+  <div class="preset-chips" id="preset-chips">
+    <button class="pchip pchip-save" onclick="openPresetModal()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Save current settings
+    </button>
+  </div>
+</div>
+
+<div id="main">
+
+<!-- ═══════════════════════════════════════
+     OPTIMIZER PAGE
+════════════════════════════════════════ -->
+<div id="page-opt" class="page active">
+
+  <div id="opt-dz" class="dz"
+       onclick="document.getElementById('opt-file-input').click()"
+       ondragover="dzOver(event,'opt-dz')" ondragleave="dzOut('opt-dz')" ondrop="handleOptDrop(event)">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    <div class="dz-title">Drop an image here</div>
+    <div class="dz-sub">JPG &middot; PNG &middot; WebP &middot; GIF &mdash; or click to browse</div>
+    <div class="dz-cta">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Choose File
+    </div>
+  </div>
+  <input type="file" id="opt-file-input" accept="image/*" style="display:none"/>
+
+  <div id="opt-editor" style="display:none">
+    <div id="opt-wrap">
+      <div>
+        <div id="opt-pair" class="img-pair one">
+          <div>
+            <div class="img-lbl">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Original
+            </div>
+            <div class="img-box"><img id="orig-img" src="" alt="original"/></div>
+            <div class="img-meta" id="orig-meta"></div>
+          </div>
+          <div id="prev-col" style="display:none">
+            <div class="img-lbl gold">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Optimized
+            </div>
+            <div class="img-box gold"><img id="prev-img" src="" alt="optimized"/></div>
+            <div class="img-meta" id="prev-meta"></div>
+          </div>
+        </div>
+        <div id="opt-stats" class="stats" style="display:none;grid-template-columns:repeat(5,1fr)">
+          <div class="stat">
+            <div class="stat-lbl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Before</div>
+            <div class="stat-val" id="s-before">—</div>
+          </div>
+          <div class="stat hl">
+            <div class="stat-lbl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>After</div>
+            <div class="stat-val" id="s-after">—</div>
+          </div>
+          <div class="stat hl">
+            <div class="stat-lbl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Saved</div>
+            <div class="stat-val" id="s-saved">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-lbl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Output</div>
+            <div class="stat-val" id="s-dims">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-lbl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>DPI</div>
+            <div class="stat-val" id="s-dpi">—</div>
+          </div>
+        </div>
+        <button class="link-btn" onclick="optReset()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Load a different image
+        </button>
+      </div>
+
+      <div id="opt-sidebar">
+        <div>
+          <label class="lbl">Filename</label>
+          <div class="file-row">
+            <input class="inp" id="opt-name" value="optimized" style="border-radius:7px 0 0 7px;flex:1"/>
+            <div class="file-ext" id="opt-ext">.webp</div>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Convert To</label>
+          <div class="fmt-grid">
+            <button class="fmt-btn on" id="fmt-webp" onclick="setFmt('webp')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              WEBP
+            </button>
+            <button class="fmt-btn" id="fmt-jpg" onclick="setFmt('jpg')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              JPG
+            </button>
+            <button class="fmt-btn" id="fmt-png" onclick="setFmt('png')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+              PNG
+            </button>
+            <button class="fmt-btn" id="fmt-gif" onclick="setFmt('gif')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              GIF
+            </button>
+          </div>
+          <div class="fmt-note" id="fmt-note">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Best for web — smallest file, great quality
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Dimensions (px)</label>
+          <div class="dim-row">
+            <div class="dim-col"><div class="dim-sub">WIDTH</div><input class="inp" type="number" id="opt-w" min="1"/></div>
+            <div class="dim-x">×</div>
+            <div class="dim-col"><div class="dim-sub">HEIGHT</div><input class="inp" type="number" id="opt-h" min="1"/></div>
+          </div>
+          <label class="aspect-check">
+            <input type="checkbox" id="lock-ar" checked style="accent-color:#f5c842"/>
+            Lock aspect ratio
+          </label>
+        </div>
+        <!-- RESOLUTION -->
+        <div>
+          <label class="lbl">
+            Resolution &nbsp;<span id="dpi-display" style="color:#f5c842;font-family:'DM Mono',monospace;font-size:11px">72 dpi</span>
+          </label>
+          <div class="dpi-grid">
+            <button class="dpi-btn on" id="dpi-72"  onclick="setDpi(72,this)">72<span class="dpi-sub">Screen</span></button>
+            <button class="dpi-btn"    id="dpi-96"  onclick="setDpi(96,this)">96<span class="dpi-sub">Web</span></button>
+            <button class="dpi-btn"    id="dpi-150" onclick="setDpi(150,this)">150<span class="dpi-sub">Mid</span></button>
+            <button class="dpi-btn"    id="dpi-300" onclick="setDpi(300,this)">300<span class="dpi-sub">Print</span></button>
+          </div>
+          <div class="dpi-custom-row">
+            <input class="inp" type="number" id="dpi-custom" min="1" max="1200" placeholder="Custom…" oninput="setDpiCustom(this.value)"/>
+            <span>dpi</span>
+          </div>
+        </div>
+          <label class="lbl">Quality &nbsp;<span id="q-num" style="color:#f5c842;font-family:'DM Mono',monospace">82</span><span style="color:#444"> / 100</span></label>
+          <input type="range" min="10" max="100" value="82" id="opt-q" style="width:100%;accent-color:#f5c842;cursor:pointer"/>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#3a3a42;font-family:'DM Mono',monospace;margin-top:3px">
+            <span>Smaller</span><span>Balanced</span><span>Best quality</span>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Quick Presets</label>
+          <div class="preset-list">
+            <button class="preset-btn" onclick="applyPreset(1920)">
+              <span class="preset-btn-left"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Full HD</span>
+              <span class="preset-tag">1920px</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset(1080)">
+              <span class="preset-btn-left"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Social Square</span>
+              <span class="preset-tag">1080px</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset(400)">
+              <span class="preset-btn-left"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Thumbnail</span>
+              <span class="preset-tag">400px</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset(0)">
+              <span class="preset-btn-left"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Half Size</span>
+              <span class="preset-tag">50%</span>
+            </button>
+          </div>
+        </div>
+        <div id="size-card" class="size-card" style="display:none">
+          <div class="size-card-lbl">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exported File Size
+          </div>
+          <div class="size-card-val" id="size-val">—</div>
+          <div class="size-card-sub" id="size-sub"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <button class="btn-pri" id="opt-go" onclick="runOptimize()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Optimize &amp; Preview
+          </button>
+          <button class="btn-sec" id="opt-dl" style="display:none" onclick="downloadOpt()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <canvas id="opt-canvas" style="display:none"></canvas>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     SHUFFLE PAGE
+════════════════════════════════════════ -->
+<div id="page-shuf" class="page">
+
+  <div id="shuf-dz" class="dz"
+       onclick="document.getElementById('shuf-file-input').click()"
+       ondragover="dzOver(event,'shuf-dz')" ondragleave="dzOut('shuf-dz')" ondrop="handleShufDrop(event)">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+    <div class="dz-title">Drop images to shuffle</div>
+    <div class="dz-sub">Upload multiple files &mdash; randomize, group &amp; rename</div>
+    <div class="dz-cta">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Choose Files
+    </div>
+  </div>
+  <input type="file" id="shuf-file-input" accept="image/*" multiple style="display:none"/>
+
+  <div id="shuf-editor" style="display:none">
+    <div id="shuf-wrap">
+      <div>
+        <!-- Group badge bar -->
+        <div id="group-bar">
+          <div class="group-bar-top">
+            <div class="group-bar-lbl">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              Groups / Categories
+            </div>
+          </div>
+          <div class="group-pills" id="group-pills">
+            <button class="gpill-add" onclick="openGroupModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New group
+            </button>
+          </div>
+          <div class="group-filter-row" id="group-filters" style="display:none">
+            <span style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:.8px">Show:</span>
+            <button class="gfilter on" data-filter="all" onclick="setFilter('all',this)">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              All
+            </button>
+            <button class="gfilter" data-filter="none" onclick="setFilter('none',this)">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              Untagged
+            </button>
+          </div>
+        </div>
+
+        <div class="shuf-top">
+          <div class="shuf-count">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <b id="shuf-n">0</b> images
+            <span class="stag" id="shuf-tag" style="display:none">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              shuffled
+            </span>
+          </div>
+          <div class="shuf-btns">
+            <button class="sm-btn" onclick="document.getElementById('shuf-file-input').click()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add more
+            </button>
+            <button class="sm-btn sm-ghost" onclick="shufClear()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+              Clear all
+            </button>
+          </div>
+        </div>
+        <div class="thumb-grid" id="thumb-grid"></div>
+        <div class="hint">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Drag to reorder · Click a badge to change group
+        </div>
+      </div>
+
+      <div id="shuf-sidebar">
+        <div class="lbl" style="margin-bottom:0;display:flex;align-items:center;gap:6px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Rename Settings
+        </div>
+        <div>
+          <label class="lbl">Filename Prefix</label>
+          <input class="inp" id="shuf-prefix" value="image"/>
+        </div>
+        <div>
+          <label class="lbl">Start Numbering At</label>
+          <input class="inp" type="number" id="shuf-start" value="1" min="0"/>
+        </div>
+        <div>
+          <label class="aspect-check" style="color:#777">
+            <input type="checkbox" id="shuf-pad" checked style="accent-color:#f5c842"/>
+            Pad with leading zeros
+          </label>
+          <div style="margin-top:6px;font-size:11px;color:#3a3a42" id="pad-eg">e.g. image_01.jpg</div>
+        </div>
+        <div class="name-preview">
+          <div class="np-lbl">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Name Preview
+          </div>
+          <div id="np-list"></div>
+        </div>
+        <button class="btn-pri" onclick="doShuffle()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+          Shuffle Order
+        </button>
+        <button class="btn-sec" onclick="downloadAll()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download All Renamed
+        </button>
+        <div id="shuf-done" class="success" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     BATCH EXPORT PAGE
+════════════════════════════════════════ -->
+<div id="page-batch" class="page">
+  <div id="batch-wrap">
+    <!-- LEFT: file list -->
+    <div>
+      <div id="batch-drop" class="dz"
+           onclick="document.getElementById('batch-file-input').click()"
+           ondragover="dzOver(event,'batch-drop')" ondragleave="dzOut('batch-drop')" ondrop="handleBatchDrop(event)">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><polyline points="9 13 12 16 15 13"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+        <div class="dz-title">Drop a folder or images</div>
+        <div class="dz-sub">Select multiple files — all will be processed with your settings below</div>
+        <div class="dz-cta">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Choose Files
+        </div>
+      </div>
+      <input type="file" id="batch-file-input" accept="image/*" multiple style="display:none"/>
+
+      <div id="batch-file-list" class="batch-file-list" style="display:none">
+        <div class="batch-list-header">
+          <div class="batch-list-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <b id="batch-count">0</b> images queued
+          </div>
+          <button class="sm-btn sm-ghost" onclick="batchClear()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            Clear all
+          </button>
+        </div>
+        <div class="batch-grid" id="batch-grid"></div>
+        <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-progress-fill"></div></div>
+        <div class="batch-summary" id="batch-summary" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: settings sidebar (mirrors optimizer) -->
+    <div id="batch-sidebar">
+      <div class="lbl" style="display:flex;align-items:center;gap:6px;margin-bottom:0">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Export Settings
+      </div>
+
+      <!-- Output format -->
+      <div>
+        <label class="lbl">Convert To</label>
+        <div class="fmt-grid">
+          <button class="fmt-btn on" id="bfmt-webp" onclick="setBatchFmt('webp')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            WEBP
+          </button>
+          <button class="fmt-btn" id="bfmt-jpg" onclick="setBatchFmt('jpg')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            JPG
+          </button>
+          <button class="fmt-btn" id="bfmt-png" onclick="setBatchFmt('png')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            PNG
+          </button>
+          <button class="fmt-btn" id="bfmt-gif" onclick="setBatchFmt('gif')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            GIF
+          </button>
+        </div>
+      </div>
+
+      <!-- Resize mode -->
+      <div>
+        <label class="lbl">Resize Mode</label>
+        <div style="display:flex;flex-direction:column;gap:6px" id="batch-resize-modes">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#888;padding:9px 12px;background:#13131a;border:1px solid #1e1e24;border-radius:8px;transition:border-color .15s" id="brm-none-lbl">
+            <input type="radio" name="batchResize" value="none" id="brm-none" checked style="accent-color:#f5c842"/> Keep original size
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#888;padding:9px 12px;background:#13131a;border:1px solid #1e1e24;border-radius:8px;transition:border-color .15s" id="brm-width-lbl">
+            <input type="radio" name="batchResize" value="width" id="brm-width" style="accent-color:#f5c842"/> Set max width
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#888;padding:9px 12px;background:#13131a;border:1px solid #1e1e24;border-radius:8px;transition:border-color .15s" id="brm-exact-lbl">
+            <input type="radio" name="batchResize" value="exact" id="brm-exact" style="accent-color:#f5c842"/> Exact dimensions
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#888;padding:9px 12px;background:#13131a;border:1px solid #1e1e24;border-radius:8px;transition:border-color .15s" id="brm-pct-lbl">
+            <input type="radio" name="batchResize" value="pct" id="brm-pct" style="accent-color:#f5c842"/> Scale by %
+          </label>
+        </div>
+        <!-- Resize inputs -->
+        <div id="bsize-width" style="margin-top:8px;display:none">
+          <div class="dim-sub" style="margin-bottom:3px">MAX WIDTH (px)</div>
+          <input class="inp" type="number" id="batch-max-w" value="1920" min="1"/>
+        </div>
+        <div id="bsize-exact" style="margin-top:8px;display:none">
+          <div class="dim-row">
+            <div class="dim-col"><div class="dim-sub">WIDTH</div><input class="inp" type="number" id="batch-ex-w" value="1920" min="1"/></div>
+            <div class="dim-x">×</div>
+            <div class="dim-col"><div class="dim-sub">HEIGHT</div><input class="inp" type="number" id="batch-ex-h" value="1080" min="1"/></div>
+          </div>
+        </div>
+        <div id="bsize-pct" style="margin-top:8px;display:none">
+          <div class="dim-sub" style="margin-bottom:3px">SCALE %</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input class="inp" type="number" id="batch-pct" value="50" min="1" max="200" style="flex:1"/>
+            <span style="font-size:13px;color:#555;font-family:'DM Mono',monospace">%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quality -->
+      <div id="batch-quality-section">
+        <label class="lbl">Quality &nbsp;<span id="bq-num" style="color:#f5c842;font-family:'DM Mono',monospace">82</span><span style="color:#444"> / 100</span></label>
+        <input type="range" min="10" max="100" value="82" id="batch-q" style="width:100%;accent-color:#f5c842;cursor:pointer"/>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#3a3a42;font-family:'DM Mono',monospace;margin-top:3px">
+          <span>Smaller</span><span>Balanced</span><span>Best quality</span>
+        </div>
+      </div>
+
+      <!-- DPI -->
+      <div>
+        <label class="lbl">Resolution &nbsp;<span id="bdpi-display" style="color:#f5c842;font-family:'DM Mono',monospace;font-size:11px">72 dpi</span></label>
+        <div class="dpi-grid">
+          <button class="dpi-btn on" id="bdpi-72"  onclick="setBatchDpi(72,this)">72<span class="dpi-sub">Screen</span></button>
+          <button class="dpi-btn"    id="bdpi-96"  onclick="setBatchDpi(96,this)">96<span class="dpi-sub">Web</span></button>
+          <button class="dpi-btn"    id="bdpi-150" onclick="setBatchDpi(150,this)">150<span class="dpi-sub">Mid</span></button>
+          <button class="dpi-btn"    id="bdpi-300" onclick="setBatchDpi(300,this)">300<span class="dpi-sub">Print</span></button>
+        </div>
+      </div>
+
+      <!-- Output filename pattern -->
+      <div>
+        <label class="lbl">Output Filename Pattern</label>
+        <input class="inp" id="batch-pattern" value="{name}" style="margin-bottom:6px"/>
+        <div style="font-size:10px;color:#444;line-height:1.7">
+          <b style="color:#666">{name}</b> = original name &nbsp;·&nbsp;
+          <b style="color:#666">{n}</b> = sequence # &nbsp;·&nbsp;
+          <b style="color:#666">{w}</b> = width &nbsp;·&nbsp;
+          <b style="color:#666">{h}</b> = height
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <!-- ZIP toggle -->
+        <div style="background:#13131a;border:1px solid #1e1e24;border-radius:10px;padding:13px 14px">
+          <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
+            <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#888">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Download as ZIP
+            </span>
+            <span id="zip-toggle-track" style="width:40px;height:22px;background:#2a2a30;border-radius:11px;position:relative;transition:background .2s;flex-shrink:0">
+              <span id="zip-toggle-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;background:#555;border-radius:50%;transition:all .2s"></span>
+            </span>
+            <input type="checkbox" id="zip-toggle" style="display:none" onchange="updateZipToggle()"/>
+          </label>
+          <div id="zip-name-row" style="margin-top:10px;display:none">
+            <div style="font-size:9px;color:#555;font-family:'DM Mono',monospace;margin-bottom:4px;text-transform:uppercase;letter-spacing:.8px">ZIP Filename</div>
+            <div style="display:flex;align-items:center;gap:0">
+              <input class="inp" id="zip-name" value="batch-export" style="border-radius:7px 0 0 7px;flex:1"/>
+              <div style="padding:9px 10px;background:#1c1c22;border:1px solid #2c2c32;border-left:none;border-radius:0 7px 7px 0;font-size:12px;color:#555;font-family:'DM Mono',monospace">.zip</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-pri" id="batch-go" onclick="runBatch()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Process All &amp; Download
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- PRESET SAVE MODAL -->
+<div id="preset-modal">
+  <div id="preset-modal-box">
+    <div id="pm-title">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      Save Preset
+    </div>
+    <div>
+      <label class="lbl">Preset Name</label>
+      <input class="inp" id="pm-name" placeholder="e.g. Web Hero, Print 300dpi, Thumbnail…" style="margin-bottom:12px"/>
+    </div>
+    <div class="lbl" style="margin-bottom:6px">Settings to save</div>
+    <div id="pm-summary"></div>
+    <div class="pm-actions">
+      <button class="pm-cancel" onclick="closePresetModal()">Cancel</button>
+      <button class="pm-save" onclick="savePreset()">Save Preset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GROUP MODAL ═══ -->
+<div id="group-modal">
+  <div id="group-modal-box">
+    <div id="gm-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      <span id="gm-title-text">New Group</span>
+    </div>
+    <div class="gm-row">
+      <label class="lbl">Group Name</label>
+      <input class="inp" id="gm-name" placeholder="e.g. Portfolio, Products, Team…"/>
+    </div>
+    <div class="gm-row">
+      <label class="lbl">Icon</label>
+      <div class="gm-icon-grid" id="gm-icon-grid"></div>
+    </div>
+    <div class="gm-row">
+      <label class="lbl">Color</label>
+      <div class="gm-color-grid" id="gm-color-grid"></div>
+    </div>
+    <div class="gm-actions" id="gm-actions">
+      <button class="gm-cancel" onclick="closeGroupModal()">Cancel</button>
+      <button class="gm-save" onclick="saveGroup()">Save Group</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+//  LUCIDE ICON HELPER
+// ═══════════════════════════════════
+// Wait for lucide to load then create icons
+window.addEventListener('load', function() {
+  if (window.lucide) lucide.createIcons();
+});
+
+function svgIcon(name, size, color) {
+  size = size || 12;
+  // Inline SVG paths for icons we use in dynamic content
+  var paths = {
+    'image':       '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+    'folder':      '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+    'star':        '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    'heart':       '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+    'tag':         '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+    'users':       '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    'briefcase':   '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+    'camera':      '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+    'layers':      '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+    'grid':        '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+    'monitor':     '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+    'shopping-bag':'<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+    'palette':     '<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.47-1.125-.29-.29-.47-.688-.47-1.125A1.688 1.688 0 0 1 14.39 16h1.99C19.51 16 22 13.51 22 10.39 22 5.74 17.52 2 12 2z"/>',
+    'map-pin':     '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+    'zap':         '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    'book':        '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+    'music':       '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+    'home':        '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+    'sun':         '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>',
+  };
+  var d = paths[name] || paths['tag'];
+  var c = color || 'currentColor';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';
+}
+
+// ═══════════════════════════════════
+//  TAB SWITCH
+// ═══════════════════════════════════
+function showTab(id) {
+  ['opt','shuf'].forEach(function(t) {
+    document.getElementById('page-'+t).classList.toggle('active', t===id);
+    document.getElementById('tab-'+t+'-btn').classList.toggle('active', t===id);
+  });
+}
+
+// ═══════════════════════════════════
+//  DRAG / DROP HELPERS
+// ═══════════════════════════════════
+function dzOver(e,id){ e.preventDefault(); document.getElementById(id).classList.add('over'); }
+function dzOut(id){ document.getElementById(id).classList.remove('over'); }
+
+// ═══════════════════════════════════
+//  BYTES FORMATTER
+// ═══════════════════════════════════
+function fb(b){
+  if(b<1024) return b+' B';
+  if(b<1048576) return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(2)+' MB';
+}
+
+// ═══════════════════════════════════
+//  OPTIMIZER
+// ═══════════════════════════════════
+var O={file:null,img:null,aspect:1,fmt:'webp',previewUrl:null,dpi:72};
+var FMT_NOTES={
+  webp:'Best for web — smallest file, great quality',
+  jpg:'Universal · great for photos · lossy',
+  png:'Lossless · supports transparency · larger files',
+  gif:'Animation support · limited color palette'
+};
+
+document.getElementById('opt-file-input').addEventListener('change',function(){ if(this.files[0]) optLoad(this.files[0]); });
+document.getElementById('opt-q').addEventListener('input',function(){ document.getElementById('q-num').textContent=this.value; });
+document.getElementById('opt-w').addEventListener('input',function(){
+  var w=parseInt(this.value);
+  if(!isNaN(w)&&document.getElementById('lock-ar').checked&&O.img) document.getElementById('opt-h').value=Math.round(w/O.aspect);
+});
+document.getElementById('opt-h').addEventListener('input',function(){
+  var h=parseInt(this.value);
+  if(!isNaN(h)&&document.getElementById('lock-ar').checked&&O.img) document.getElementById('opt-w').value=Math.round(h*O.aspect);
+});
+
+function handleOptDrop(e){ e.preventDefault(); dzOut('opt-dz'); var f=e.dataTransfer.files[0]; if(f) optLoad(f); }
+
+function optLoad(file){
+  if(!file||!file.type.startsWith('image/')){ alert('Please choose a valid image file.'); return; }
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      O.file=file; O.img=img; O.aspect=img.width/img.height; O.previewUrl=null;
+      document.getElementById('opt-w').value=img.width;
+      document.getElementById('opt-h').value=img.height;
+      document.getElementById('opt-name').value=file.name.replace(/\.[^.]+$/,'');
+      document.getElementById('orig-img').src=ev.target.result;
+      document.getElementById('orig-meta').textContent=img.width+'×'+img.height+'px · '+fb(file.size)+' · '+file.name.split('.').pop().toUpperCase();
+      document.getElementById('prev-col').style.display='none';
+      document.getElementById('opt-pair').className='img-pair one';
+      document.getElementById('opt-stats').style.display='none';
+      document.getElementById('size-card').style.display='none';
+      document.getElementById('opt-dl').style.display='none';
+      document.getElementById('opt-dz').style.display='none';
+      document.getElementById('opt-editor').style.display='block';
+    };
+    img.onerror=function(){ alert('Could not read that image.'); };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function setDpi(val, btn) {
+  O.dpi = val;
+  document.querySelectorAll('.dpi-btn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  document.getElementById('dpi-display').textContent = val + ' dpi';
+  document.getElementById('dpi-custom').value = '';
+}
+function setDpiCustom(val) {
+  var v = parseInt(val);
+  if (isNaN(v) || v < 1) return;
+  O.dpi = v;
+  document.querySelectorAll('.dpi-btn').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('dpi-display').textContent = v + ' dpi';
+}
+
+function optReset(){
+  O={file:null,img:null,aspect:1,fmt:'webp',previewUrl:null,dpi:72};
+  // reset DPI UI
+  document.querySelectorAll('.dpi-btn').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('dpi-72').classList.add('on');
+  document.getElementById('dpi-display').textContent='72 dpi';
+  document.getElementById('dpi-custom').value='';
+  document.getElementById('opt-dz').style.display='';
+  document.getElementById('opt-editor').style.display='none';
+  document.getElementById('opt-file-input').value='';
+}
+
+function setFmt(f){
+  O.fmt=f;
+  ['webp','jpg','png','gif'].forEach(function(x){ document.getElementById('fmt-'+x).className='fmt-btn'+(x===f?' on':''); });
+  var noteEl=document.getElementById('fmt-note');
+  noteEl.innerHTML=svgIcon('info',11,'#444')+' '+FMT_NOTES[f];
+  document.getElementById('quality-section').style.display=(f==='png'||f==='gif')?'none':'';
+  document.getElementById('opt-ext').textContent='.'+f;
+  if(O.previewUrl) updateDlBtn();
+}
+
+function updateDlBtn(){
+  var nm=(document.getElementById('opt-name').value||'image')+'.'+O.fmt;
+  document.getElementById('opt-dl').innerHTML=svgIcon('download',14,'#f5c842')+' Download '+nm;
+}
+
+function applyPreset(pw){
+  if(!O.img) return;
+  var w=pw===0?Math.round(O.img.width/2):pw;
+  document.getElementById('opt-w').value=w;
+  document.getElementById('opt-h').value=Math.round(w/O.aspect);
+}
+
+function runOptimize(){
+  if(!O.img) return;
+  var btn=document.getElementById('opt-go');
+  btn.disabled=true;
+  btn.innerHTML=svgIcon('loader',15,'#555')+' Processing…';
+  setTimeout(function(){
+    var w=parseInt(document.getElementById('opt-w').value)||O.img.width;
+    var h=parseInt(document.getElementById('opt-h').value)||O.img.height;
+    var canvas=document.getElementById('opt-canvas');
+    canvas.width=w; canvas.height=h;
+    var ctx=canvas.getContext('2d');
+    ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+    ctx.drawImage(O.img,0,0,w,h);
+    var mime=O.fmt==='jpg'?'image/jpeg':O.fmt==='png'?'image/png':O.fmt==='gif'?'image/gif':'image/webp';
+    var q=(O.fmt==='png'||O.fmt==='gif')?undefined:parseInt(document.getElementById('opt-q').value)/100;
+    var dataUrl=canvas.toDataURL(mime,q);
+    // Embed DPI metadata into the binary
+    if(O.fmt==='png'){
+      dataUrl=embedPngDpi(dataUrl,O.dpi);
+    } else if(O.fmt==='jpg'){
+      dataUrl=embedJpegDpi(dataUrl,O.dpi);
+    }
+    var byteLen=Math.round(dataUrl.split(',')[1].length*0.75);
+    O.previewUrl=dataUrl;
+    document.getElementById('prev-img').src=dataUrl;
+    document.getElementById('prev-meta').textContent=w+'×'+h+'px · '+fb(byteLen)+' · '+O.fmt.toUpperCase()+' · '+O.dpi+' dpi';
+    document.getElementById('prev-col').style.display='';
+    document.getElementById('opt-pair').className='img-pair two';
+    var sav=(((O.file.size-byteLen)/O.file.size)*100).toFixed(1);
+    document.getElementById('s-before').textContent=fb(O.file.size);
+    document.getElementById('s-after').textContent=fb(byteLen);
+    document.getElementById('s-saved').textContent=Math.max(0,sav)+'%';
+    document.getElementById('s-dims').textContent=w+'×'+h;
+    document.getElementById('s-dpi').textContent=O.dpi+' dpi';
+    document.getElementById('opt-stats').style.display='grid';
+    document.getElementById('size-val').textContent=fb(byteLen);
+    document.getElementById('size-sub').textContent=(parseFloat(sav)>0?'↓ '+sav+'% smaller than original':'↑ '+Math.abs(sav)+'% larger than original')+' · '+O.dpi+' dpi';
+    document.getElementById('size-card').style.display='';
+    updateDlBtn();
+    document.getElementById('opt-dl').style.display='';
+    btn.disabled=false;
+    btn.innerHTML=svgIcon('zap',15,'#0f0f0a')+' Optimize &amp; Preview';
+  },60);
+}
+
+function downloadOpt(){
+  if(!O.previewUrl) return;
+  var nm=(document.getElementById('opt-name').value||'image')+'.'+O.fmt;
+  var a=document.createElement('a'); a.href=O.previewUrl; a.download=nm;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ═══════════════════════════════════
+//  GROUPS / BADGES
+// ═══════════════════════════════════
+var GROUPS = [];  // [{id, name, icon, color}]
+var ACTIVE_FILTER = 'all';
+var EDITING_GROUP_ID = null;
+
+var GROUP_ICONS = ['image','folder','star','heart','tag','users','briefcase','camera','layers','grid','monitor','shopping-bag','palette','map-pin','zap','book','music','home','sun'];
+var GROUP_COLORS = ['#e05252','#e0852a','#d4c230','#52b852','#30b8d4','#5270e0','#a052e0','#e052a8','#888','#c8a87a'];
+
+function openGroupModal(editId) {
+  EDITING_GROUP_ID = editId || null;
+  var isEdit = !!editId;
+  document.getElementById('gm-title-text').textContent = isEdit ? 'Edit Group' : 'New Group';
+  var g = isEdit ? GROUPS.find(function(x){return x.id===editId;}) : null;
+  document.getElementById('gm-name').value = g ? g.name : '';
+
+  // build icon grid
+  var iconGrid = document.getElementById('gm-icon-grid');
+  iconGrid.innerHTML = '';
+  GROUP_ICONS.forEach(function(ic) {
+    var btn = document.createElement('button');
+    btn.className = 'gm-icon-opt' + (g && g.icon===ic ? ' sel' : (!g && ic==='tag' ? ' sel' : ''));
+    btn.innerHTML = svgIcon(ic, 16, '#555');
+    btn.dataset.icon = ic;
+    btn.onclick = function() {
+      document.querySelectorAll('.gm-icon-opt').forEach(function(b){b.classList.remove('sel');b.querySelector('svg').style.stroke='#555';});
+      btn.classList.add('sel'); btn.querySelector('svg').style.stroke='#f5c842';
+    };
+    iconGrid.appendChild(btn);
+  });
+
+  // build color grid
+  var colorGrid = document.getElementById('gm-color-grid');
+  colorGrid.innerHTML = '';
+  GROUP_COLORS.forEach(function(c) {
+    var btn = document.createElement('button');
+    btn.className = 'gm-color-opt' + (g && g.color===c ? ' sel' : (!g && c===GROUP_COLORS[0] ? ' sel' : ''));
+    btn.style.background = c;
+    btn.dataset.color = c;
+    btn.onclick = function() {
+      document.querySelectorAll('.gm-color-opt').forEach(function(b){b.classList.remove('sel');});
+      btn.classList.add('sel');
+    };
+    colorGrid.appendChild(btn);
+  });
+
+  // actions
+  var actions = document.getElementById('gm-actions');
+  actions.innerHTML = '';
+  if (isEdit) {
+    var delBtn = document.createElement('button');
+    delBtn.className = 'gm-delete';
+    delBtn.innerHTML = svgIcon('trash',13,'#c04040') + ' Delete';
+    delBtn.onclick = function() { deleteGroup(editId); };
+    actions.appendChild(delBtn);
+  }
+  var cancelBtn = document.createElement('button');
+  cancelBtn.className = 'gm-cancel'; cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = closeGroupModal;
+  var saveBtn = document.createElement('button');
+  saveBtn.className = 'gm-save'; saveBtn.textContent = isEdit ? 'Save Changes' : 'Create Group';
+  saveBtn.onclick = saveGroup;
+  actions.appendChild(cancelBtn); actions.appendChild(saveBtn);
+
+  document.getElementById('group-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('gm-name').focus(); }, 50);
+}
+
+function closeGroupModal() {
+  document.getElementById('group-modal').classList.remove('open');
+  EDITING_GROUP_ID = null;
+}
+
+document.getElementById('group-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeGroupModal();
+});
+
+function saveGroup() {
+  var name = document.getElementById('gm-name').value.trim();
+  if (!name) { document.getElementById('gm-name').focus(); return; }
+  var selIcon = document.querySelector('.gm-icon-opt.sel');
+  var selColor = document.querySelector('.gm-color-opt.sel');
+  var icon = selIcon ? selIcon.dataset.icon : 'tag';
+  var color = selColor ? selColor.dataset.color : GROUP_COLORS[0];
+
+  if (EDITING_GROUP_ID) {
+    var g = GROUPS.find(function(x){return x.id===EDITING_GROUP_ID;});
+    if (g) { g.name=name; g.icon=icon; g.color=color; }
+  } else {
+    GROUPS.push({id:'g'+Date.now(),name:name,icon:icon,color:color});
+  }
+  closeGroupModal();
+  renderGroupPills();
+  renderGrid();
+}
+
+function deleteGroup(id) {
+  GROUPS = GROUPS.filter(function(g){return g.id!==id;});
+  S.forEach(function(item){ if(item.groupId===id) item.groupId=null; });
+  closeGroupModal();
+  renderGroupPills();
+  renderGrid();
+}
+
+function renderGroupPills() {
+  var container = document.getElementById('group-pills');
+  container.innerHTML = '';
+  GROUPS.forEach(function(g) {
+    var pill = document.createElement('button');
+    pill.className = 'gpill selected';
+    pill.style.background = hexToRgba(g.color, 0.12);
+    pill.style.borderColor = hexToRgba(g.color, 0.4);
+    pill.style.color = g.color;
+    pill.innerHTML = svgIcon(g.icon, 12, g.color) + ' ' + g.name;
+    pill.onclick = function() { openGroupModal(g.id); };
+    container.appendChild(pill);
+  });
+  // Add button
+  var addBtn = document.createElement('button');
+  addBtn.className = 'gpill-add';
+  addBtn.innerHTML = svgIcon('plus',12,'#555') + ' New group';
+  addBtn.onclick = function() { openGroupModal(); };
+  container.appendChild(addBtn);
+
+  // Show/hide filter row
+  var filterRow = document.getElementById('group-filters');
+  filterRow.style.display = GROUPS.length ? 'flex' : 'none';
+  // Rebuild group filters
+  var existing = filterRow.querySelectorAll('[data-filter^="g"]');
+  existing.forEach(function(el){el.remove();});
+  GROUPS.forEach(function(g) {
+    var btn = document.createElement('button');
+    btn.className = 'gfilter' + (ACTIVE_FILTER===g.id ? ' on' : '');
+    btn.dataset.filter = g.id;
+    btn.innerHTML = svgIcon(g.icon, 11, ACTIVE_FILTER===g.id ? g.color : '#666') + ' ' + g.name;
+    btn.style.color = ACTIVE_FILTER===g.id ? g.color : '';
+    btn.onclick = function() { setFilter(g.id, btn); };
+    filterRow.appendChild(btn);
+  });
+}
+
+function setFilter(val, btn) {
+  ACTIVE_FILTER = val;
+  document.querySelectorAll('.gfilter').forEach(function(b){
+    b.classList.remove('on');
+    var gid = b.dataset.filter;
+    var g = GROUPS.find(function(x){return x.id===gid;});
+    if (b.querySelector('svg') && g) b.querySelector('svg').style.stroke = '#666';
+    b.style.color = '';
+  });
+  btn.classList.add('on');
+  var g = GROUPS.find(function(x){return x.id===val;});
+  if (btn.querySelector('svg') && g) { btn.querySelector('svg').style.stroke = g.color; btn.style.color = g.color; }
+  renderGrid();
+}
+
+function hexToRgba(hex, alpha) {
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+alpha+')';
+}
+
+// ═══════════════════════════════════
+//  SHUFFLE
+// ═══════════════════════════════════
+var S=[];
+var S_drag=null;
+
+document.getElementById('shuf-file-input').addEventListener('change',function(){ if(this.files.length) shufLoad(this.files); });
+['shuf-prefix','shuf-start','shuf-pad'].forEach(function(id){
+  document.getElementById(id).addEventListener('input',renderGrid);
+  document.getElementById(id).addEventListener('change',renderGrid);
+});
+
+function handleShufDrop(e){ e.preventDefault(); dzOut('shuf-dz'); shufLoad(e.dataTransfer.files); }
+
+function shufLoad(files){
+  var valid=Array.from(files).filter(function(f){return f.type.startsWith('image/');});
+  if(!valid.length){ alert('Please choose image files.'); return; }
+  valid.forEach(function(f){
+    S.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),file:f,thumbUrl:URL.createObjectURL(f),origName:f.name,groupId:null});
+  });
+  document.getElementById('shuf-dz').style.display='none';
+  document.getElementById('shuf-editor').style.display='block';
+  document.getElementById('shuf-done').style.display='none';
+  renderGrid();
+}
+
+function shufClear(){
+  S.forEach(function(item){URL.revokeObjectURL(item.thumbUrl);});
+  S=[];
+  document.getElementById('shuf-dz').style.display='';
+  document.getElementById('shuf-editor').style.display='none';
+  document.getElementById('shuf-file-input').value='';
+  document.getElementById('shuf-done').style.display='none';
+  document.getElementById('shuf-tag').style.display='none';
+}
+
+function newName(idx){
+  var item=S[idx];
+  var ext=item.origName.split('.').pop();
+  var prefix=document.getElementById('shuf-prefix').value||'image';
+  var start=parseInt(document.getElementById('shuf-start').value)||0;
+  var pad=document.getElementById('shuf-pad').checked;
+  var num=start+idx;
+  var total=start+S.length-1;
+  var numStr=pad?String(num).padStart(String(total).length||1,'0'):String(num);
+  return prefix+'_'+numStr+'.'+ext;
+}
+
+function visibleItems() {
+  if (ACTIVE_FILTER==='all') return S.map(function(_,i){return i;});
+  if (ACTIVE_FILTER==='none') return S.map(function(item,i){return item.groupId?-1:i;}).filter(function(i){return i>=0;});
+  return S.map(function(item,i){return item.groupId===ACTIVE_FILTER?i:-1;}).filter(function(i){return i>=0;});
+}
+
+function renderGrid(){
+  document.getElementById('shuf-n').textContent=S.length;
+  var prefix=document.getElementById('shuf-prefix').value||'image';
+  var pad=document.getElementById('shuf-pad').checked;
+  document.getElementById('pad-eg').textContent='e.g. '+prefix+'_'+(pad?'01':'1')+'.jpg';
+
+  var visible=visibleItems();
+  var grid=document.getElementById('thumb-grid');
+  grid.innerHTML='';
+
+  visible.forEach(function(realIdx){
+    var item=S[realIdx];
+    var card=document.createElement('div');
+    card.className='tcard';
+    card.draggable=true;
+
+    // thumbnail
+    var img=document.createElement('img');
+    img.src=item.thumbUrl; img.alt=item.origName;
+
+    // group badge
+    var g=item.groupId?GROUPS.find(function(x){return x.id===item.groupId;}):null;
+    var badge=document.createElement('div');
+    badge.className='tcard-badge';
+    if(g){
+      badge.style.background=hexToRgba(g.color,0.18);
+      badge.style.color=g.color;
+      badge.innerHTML=svgIcon(g.icon,9,g.color)+' '+g.name;
+    } else {
+      badge.style.background='rgba(30,30,36,0.85)';
+      badge.style.color='#555';
+      badge.innerHTML=svgIcon('tag',9,'#555')+' tag';
+    }
+    badge.title='Click to assign group';
+
+    // assign popover
+    var assignPop=document.createElement('div');
+    assignPop.className='tcard-assign';
+    var noneOpt=document.createElement('button');
+    noneOpt.className='assign-pill assign-none';
+    noneOpt.innerHTML=svgIcon('x',9,'#666')+' None';
+    noneOpt.onclick=function(e){e.stopPropagation();item.groupId=null;assignPop.classList.remove('open');renderGrid();};
+    assignPop.appendChild(noneOpt);
+    GROUPS.forEach(function(grp){
+      var opt=document.createElement('button');
+      opt.className='assign-pill';
+      opt.style.background=hexToRgba(grp.color,0.15);
+      opt.style.color=grp.color;
+      opt.style.borderColor=hexToRgba(grp.color,0.3);
+      opt.innerHTML=svgIcon(grp.icon,9,grp.color)+' '+grp.name;
+      opt.onclick=function(e){e.stopPropagation();item.groupId=grp.id;assignPop.classList.remove('open');renderGrid();};
+      assignPop.appendChild(opt);
+    });
+    if(!GROUPS.length){
+      var hint=document.createElement('div');
+      hint.style.cssText='font-size:10px;color:#555;padding:4px 6px';
+      hint.textContent='Create groups first';
+      assignPop.appendChild(hint);
+    }
+
+    badge.onclick=function(e){
+      e.stopPropagation();
+      document.querySelectorAll('.tcard-assign.open').forEach(function(p){if(p!==assignPop)p.classList.remove('open');});
+      assignPop.classList.toggle('open');
+    };
+
+    // info row
+    var info=document.createElement('div'); info.className='tcard-info';
+    var nn=document.createElement('div'); nn.className='tcard-new'; nn.title=newName(realIdx); nn.textContent=newName(realIdx);
+    var on=document.createElement('div'); on.className='tcard-orig'; on.title=item.origName; on.textContent=item.origName;
+    info.appendChild(nn); info.appendChild(on);
+
+    // remove btn
+    var rm=document.createElement('button'); rm.className='tcard-rm'; rm.title='Remove';
+    rm.innerHTML=svgIcon('x',10,'#888');
+    rm.onclick=function(e){
+      e.stopPropagation();
+      URL.revokeObjectURL(S[realIdx].thumbUrl);
+      S.splice(realIdx,1);
+      if(!S.length) shufClear(); else renderGrid();
+    };
+
+    card.appendChild(img);
+    card.appendChild(badge);
+    card.appendChild(assignPop);
+    card.appendChild(info);
+    card.appendChild(rm);
+
+    // drag events
+    card.addEventListener('dragstart',function(e){S_drag=realIdx;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',function(){S_drag=null;card.classList.remove('dragging');document.querySelectorAll('.tcard').forEach(function(c){c.classList.remove('over');});});
+    card.addEventListener('dragover',function(e){e.preventDefault();card.classList.add('over');});
+    card.addEventListener('dragleave',function(){card.classList.remove('over');});
+    card.addEventListener('drop',function(e){
+      e.preventDefault();card.classList.remove('over');
+      if(S_drag!==null&&S_drag!==realIdx){
+        var moved=S.splice(S_drag,1)[0];
+        S.splice(realIdx,0,moved);
+        renderGrid();
+      }
+    });
+
+    // close popover on outside click
+    document.addEventListener('click',function(){ assignPop.classList.remove('open'); });
+
+    grid.appendChild(card);
+  });
+
+  // name preview
+  var list=document.getElementById('np-list'); list.innerHTML='';
+  var show=Math.min(5,S.length);
+  for(var i=0;i<show;i++){
+    var row=document.createElement('div'); row.className='np-row';
+    var g2=S[i].groupId?GROUPS.find(function(x){return x.id===S[i].groupId;}):null;
+    var dot=document.createElement('div'); dot.className='np-badge';
+    dot.style.background=g2?g2.color:'#2c2c32';
+    var numEl=document.createElement('span'); numEl.className='np-num'; numEl.textContent=(i+1)+'.';
+    var nmEl=document.createElement('span'); nmEl.className='np-name'; nmEl.textContent=newName(i);
+    row.appendChild(dot); row.appendChild(numEl); row.appendChild(nmEl);
+    list.appendChild(row);
+  }
+  if(S.length>5){
+    var more=document.createElement('div'); more.className='np-more';
+    more.textContent='…+'+(S.length-5)+' more'; list.appendChild(more);
+  }
+}
+
+function doShuffle(){
+  for(var i=S.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=S[i];S[i]=S[j];S[j]=tmp;
+  }
+  document.getElementById('shuf-tag').style.display='';
+  document.getElementById('shuf-done').style.display='none';
+  renderGrid();
+}
+
+async function downloadAll(){
+  if(!S.length) return;
+  for(var i=0;i<S.length;i++){
+    await new Promise(function(res){setTimeout(res,i*120);});
+    var a=document.createElement('a'); a.href=S[i].thumbUrl; a.download=newName(i);
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+  var d=document.getElementById('shuf-done');
+  d.querySelector('span').textContent='All '+S.length+' files downloaded!';
+  d.style.display='flex';
+}
+
+// ═══════════════════════════════════
+//  DPI METADATA EMBEDDING
+// ═══════════════════════════════════
+
+// Helper: base64 → Uint8Array and back
+function b64ToBytes(b64){ var bin=atob(b64),arr=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i); return arr; }
+function bytesToB64(arr){ var bin=''; for(var i=0;i<arr.length;i++) bin+=String.fromCharCode(arr[i]); return btoa(bin); }
+
+// Write 4-byte big-endian uint
+function writeU32(arr, offset, val){
+  arr[offset]=(val>>>24)&0xff; arr[offset+1]=(val>>>16)&0xff;
+  arr[offset+2]=(val>>>8)&0xff;  arr[offset+3]=val&0xff;
+}
+
+// CRC32 for PNG chunks
+var CRC_TABLE=(function(){
+  var t=new Uint32Array(256);
+  for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++) c=c&1?0xedb88320^(c>>>1):c>>>1; t[n]=c; }
+  return t;
+})();
+function crc32(buf, start, len){
+  var c=0xffffffff;
+  for(var i=start;i<start+len;i++) c=CRC_TABLE[(c^buf[i])&0xff]^(c>>>8);
+  return (c^0xffffffff)>>>0;
+}
+
+// Embed DPI into PNG by injecting a pHYs chunk after IHDR
+function embedPngDpi(dataUrl, dpi){
+  try {
+    var b64=dataUrl.split(',')[1];
+    var bytes=b64ToBytes(b64);
+    // pHYs chunk: pixels per unit X (4 bytes), Y (4 bytes), unit (1=metre)
+    var ppm=Math.round(dpi/0.0254); // pixels per metre
+    var chunkData=new Uint8Array(9);
+    writeU32(chunkData,0,ppm); writeU32(chunkData,4,ppm); chunkData[8]=1;
+    var chunkLen=9;
+    var chunk=new Uint8Array(12+chunkLen);
+    writeU32(chunk,0,chunkLen); // length
+    chunk[4]=112;chunk[5]=72;chunk[6]=89;chunk[7]=115; // 'pHYs'
+    chunk.set(chunkData,8);
+    // CRC over type+data
+    var crcBuf=new Uint8Array(4+chunkLen);
+    crcBuf.set(chunk.subarray(4,8),0); crcBuf.set(chunkData,4);
+    writeU32(chunk,12+chunkLen-4,crc32(crcBuf,0,crcBuf.length));
+    // Find insertion point: after IHDR chunk (8 sig + 4len + 4type + 13data + 4crc = 33)
+    var insertAt=33;
+    var out=new Uint8Array(bytes.length+chunk.length);
+    out.set(bytes.subarray(0,insertAt),0);
+    out.set(chunk,insertAt);
+    out.set(bytes.subarray(insertAt),insertAt+chunk.length);
+    return 'data:image/png;base64,'+bytesToB64(out);
+  } catch(e){ return dataUrl; }
+}
+
+// Embed DPI into JPEG by patching the JFIF APP0 segment density fields
+function embedJpegDpi(dataUrl, dpi){
+  try {
+    var b64=dataUrl.split(',')[1];
+    var bytes=b64ToBytes(b64);
+    // Scan for APP0 marker FF E0 with JFIF identifier
+    for(var i=0;i<bytes.length-10;i++){
+      if(bytes[i]===0xff&&bytes[i+1]===0xe0){
+        // Check JFIF identifier at offset +4
+        if(bytes[i+4]===0x4a&&bytes[i+5]===0x46&&bytes[i+6]===0x49&&bytes[i+7]===0x46){
+          // density unit at offset +11: 0=no unit,1=dpi,2=dpcm
+          bytes[i+11]=1; // dots per inch
+          // Xdensity at +12, Ydensity at +14 (big-endian 16-bit)
+          bytes[i+12]=(dpi>>8)&0xff; bytes[i+13]=dpi&0xff;
+          bytes[i+14]=(dpi>>8)&0xff; bytes[i+15]=dpi&0xff;
+          break;
+        }
+      }
+    }
+    return 'data:image/jpeg;base64,'+bytesToB64(bytes);
+  } catch(e){ return dataUrl; }
+}
+
+// ═══════════════════════════════════
+//  PRESETS SYSTEM
+// ═══════════════════════════════════
+var PRESETS_KEY = 'imageforge_presets';
+var ACTIVE_PRESET_ID = null;
+
+function loadPresetsFromStorage() {
+  try { return JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]'); } catch(e) { return []; }
+}
+function savePresetsToStorage(p) {
+  try { localStorage.setItem(PRESETS_KEY, JSON.stringify(p)); } catch(e) {}
+}
+
+function getCurrentSettings() {
+  return {
+    fmt:   O.fmt,
+    quality: parseInt(document.getElementById('opt-q').value),
+    dpi:   O.dpi,
+    width: document.getElementById('opt-w').value,
+    height:document.getElementById('opt-h').value,
+    lockAspect: document.getElementById('lock-ar').checked
+  };
+}
+
+function applySettingsFromPreset(s) {
+  // format
+  setFmt(s.fmt || 'webp');
+  // quality
+  if (s.quality) { document.getElementById('opt-q').value = s.quality; document.getElementById('q-num').textContent = s.quality; }
+  // dpi
+  if (s.dpi) {
+    O.dpi = s.dpi;
+    document.getElementById('dpi-display').textContent = s.dpi + ' dpi';
+    document.getElementById('dpi-custom').value = '';
+    ['72','96','150','300'].forEach(function(v){
+      document.getElementById('dpi-'+v).classList.toggle('on', parseInt(v)===s.dpi);
+    });
+  }
+  // also apply to batch sidebar
+  setBatchFmt(s.fmt || 'webp');
+  if (s.quality) { document.getElementById('batch-q').value = s.quality; document.getElementById('bq-num').textContent = s.quality; }
+  if (s.dpi) {
+    B.dpi = s.dpi;
+    document.getElementById('bdpi-display').textContent = s.dpi + ' dpi';
+    ['72','96','150','300'].forEach(function(v){
+      document.getElementById('bdpi-'+v).classList.toggle('on', parseInt(v)===s.dpi);
+    });
+  }
+}
+
+function renderPresetChips() {
+  var presets = loadPresetsFromStorage();
+  var container = document.getElementById('preset-chips');
+  container.innerHTML = '';
+  presets.forEach(function(p) {
+    var chip = document.createElement('button');
+    chip.className = 'pchip' + (ACTIVE_PRESET_ID === p.id ? ' active' : '');
+    chip.dataset.id = p.id;
+    chip.innerHTML =
+      '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>' +
+      '<span>' + p.name + '</span>' +
+      '<span style="font-size:10px;color:inherit;opacity:.6;font-family:\'DM Mono\',monospace">' + p.settings.fmt.toUpperCase() + ' · ' + p.settings.quality + 'q · ' + p.settings.dpi + 'dpi</span>';
+
+    // remove button
+    var rm = document.createElement('button');
+    rm.className = 'pchip-rm';
+    rm.title = 'Delete preset';
+    rm.innerHTML = '×';
+    rm.onclick = function(e) {
+      e.stopPropagation();
+      var all = loadPresetsFromStorage().filter(function(x){return x.id!==p.id;});
+      savePresetsToStorage(all);
+      if (ACTIVE_PRESET_ID === p.id) ACTIVE_PRESET_ID = null;
+      renderPresetChips();
+    };
+    chip.appendChild(rm);
+
+    chip.onclick = function(e) {
+      if (e.target === rm || e.target.parentElement === rm) return;
+      ACTIVE_PRESET_ID = p.id;
+      applySettingsFromPreset(p.settings);
+      renderPresetChips();
+    };
+    container.appendChild(chip);
+  });
+  // Add save button
+  var saveBtn = document.createElement('button');
+  saveBtn.className = 'pchip pchip-save';
+  saveBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Save current settings';
+  saveBtn.onclick = openPresetModal;
+  container.appendChild(saveBtn);
+}
+
+function openPresetModal() {
+  var s = getCurrentSettings();
+  document.getElementById('pm-name').value = '';
+  var sum = document.getElementById('pm-summary');
+  sum.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px">' +
+    row('Format', s.fmt.toUpperCase()) +
+    row('Quality', s.quality + ' / 100') +
+    row('Resolution', s.dpi + ' dpi') +
+    (s.width ? row('Width', s.width + 'px') : '') +
+    (s.height ? row('Height', s.height + 'px') : '') +
+    row('Lock Aspect', s.lockAspect ? 'Yes' : 'No') +
+    '</div>';
+  document.getElementById('preset-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('pm-name').focus(); }, 50);
+}
+function row(k,v){ return '<div style="color:#555">'+k+'</div><div style="color:#e4e2db;font-family:\'DM Mono\',monospace">'+v+'</div>'; }
+function closePresetModal() { document.getElementById('preset-modal').classList.remove('open'); }
+document.getElementById('preset-modal').addEventListener('click', function(e){ if(e.target===this) closePresetModal(); });
+
+function savePreset() {
+  var name = document.getElementById('pm-name').value.trim();
+  if (!name) { document.getElementById('pm-name').focus(); return; }
+  var presets = loadPresetsFromStorage();
+  var id = 'p' + Date.now();
+  presets.push({ id: id, name: name, settings: getCurrentSettings() });
+  savePresetsToStorage(presets);
+  ACTIVE_PRESET_ID = id;
+  closePresetModal();
+  renderPresetChips();
+}
+
+// Mark preset dirty when any setting changes
+function markPresetDirty() { ACTIVE_PRESET_ID = null; renderPresetChips(); }
+['opt-q','opt-w','opt-h','lock-ar','batch-q'].forEach(function(id){
+  var el = document.getElementById(id);
+  if (el) el.addEventListener('change', markPresetDirty);
+});
+
+// Init presets on load
+renderPresetChips();
+
+// ═══════════════════════════════════
+//  BATCH EXPORT
+// ═══════════════════════════════════
+var B = { files:[], fmt:'webp', dpi:72, running:false };
+var BATCH_CANVAS = document.createElement('canvas');
+
+document.getElementById('batch-file-input').addEventListener('change', function(){
+  if (this.files.length) batchLoad(this.files);
+});
+document.getElementById('batch-q').addEventListener('input', function(){
+  document.getElementById('bq-num').textContent = this.value;
+});
+
+// Resize mode radio toggle
+document.querySelectorAll('input[name="batchResize"]').forEach(function(radio){
+  radio.addEventListener('change', function(){
+    document.getElementById('bsize-width').style.display = this.value==='width' ? '' : 'none';
+    document.getElementById('bsize-exact').style.display = this.value==='exact' ? '' : 'none';
+    document.getElementById('bsize-pct').style.display   = this.value==='pct'   ? '' : 'none';
+    // highlight active label
+    ['none','width','exact','pct'].forEach(function(v){
+      var lbl = document.getElementById('brm-'+v+'-lbl');
+      if (lbl) lbl.style.borderColor = (v===radio.value) ? '#f5c842' : '#1e1e24';
+    });
+  });
+});
+
+function handleBatchDrop(e){
+  e.preventDefault(); dzOut('batch-drop');
+  batchLoad(e.dataTransfer.files);
+}
+
+function batchLoad(files){
+  var valid = Array.from(files).filter(function(f){ return f.type.startsWith('image/'); });
+  if (!valid.length) { alert('Please choose image files.'); return; }
+  valid.forEach(function(f){
+    B.files.push({ id:'b'+Date.now()+Math.random().toString(36).slice(2), file:f, status:'idle', outSize:null, error:null });
+  });
+  document.getElementById('batch-drop').style.display='none';
+  document.getElementById('batch-file-list').style.display='';
+  renderBatchGrid();
+}
+
+function batchClear(){
+  B.files=[];
+  document.getElementById('batch-drop').style.display='';
+  document.getElementById('batch-file-list').style.display='none';
+  document.getElementById('batch-summary').style.display='none';
+  document.getElementById('batch-progress-fill').style.width='0%';
+  document.getElementById('batch-file-input').value='';
+}
+
+function batchFileName(f, idx, w, h){
+  var pattern = document.getElementById('batch-pattern').value || '{name}';
+  var baseName = f.file.name.replace(/\.[^.]+$/,'');
+  var ext = B.fmt;
+  var total = B.files.length;
+  var padLen = String(total).length;
+  var nStr = String(idx+1).padStart(padLen,'0');
+  return pattern
+    .replace(/\{name\}/g, baseName)
+    .replace(/\{n\}/g, nStr)
+    .replace(/\{w\}/g, w||'')
+    .replace(/\{h\}/g, h||'')
+    + '.' + ext;
+}
+
+function renderBatchGrid(){
+  document.getElementById('batch-count').textContent = B.files.length;
+  var grid = document.getElementById('batch-grid');
+  grid.innerHTML = '';
+  B.files.forEach(function(item, idx){
+    var row = document.createElement('div');
+    row.className = 'brow' + (item.status!=='idle' ? ' '+item.status : '');
+    row.id = 'brow-'+item.id;
+
+    var thumb = document.createElement('img');
+    thumb.className = 'brow-thumb';
+    thumb.src = URL.createObjectURL(item.file);
+    thumb.onload = function(){ URL.revokeObjectURL(this.src); };
+
+    var info = document.createElement('div'); info.className = 'brow-info';
+    var name = document.createElement('div'); name.className = 'brow-name'; name.textContent = item.file.name;
+    var meta = document.createElement('div'); meta.className = 'brow-meta';
+    meta.textContent = fb(item.file.size) + (item.outSize ? ' → ' + fb(item.outSize) : '');
+    info.appendChild(name); info.appendChild(meta);
+
+    var status = document.createElement('div');
+    status.className = 'brow-status ' + item.status;
+    if (item.status==='idle')       status.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>';
+    if (item.status==='processing') status.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f5c842" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>';
+    if (item.status==='done')       status.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5cb85c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    if (item.status==='error')      status.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e05252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+
+    row.appendChild(thumb); row.appendChild(info); row.appendChild(status);
+    grid.appendChild(row);
+  });
+}
+
+function setBatchFmt(f){
+  B.fmt = f;
+  ['webp','jpg','png','gif'].forEach(function(x){
+    document.getElementById('bfmt-'+x).className = 'fmt-btn' + (x===f?' on':'');
+  });
+  document.getElementById('batch-quality-section').style.display = (f==='png'||f==='gif') ? 'none' : '';
+}
+
+function setBatchDpi(val, btn){
+  B.dpi = val;
+  document.querySelectorAll('[id^="bdpi-"]').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  document.getElementById('bdpi-display').textContent = val + ' dpi';
+}
+
+function updateZipToggle(){
+  var on = document.getElementById('zip-toggle').checked;
+  var track = document.getElementById('zip-toggle-track');
+  var thumb = document.getElementById('zip-toggle-thumb');
+  track.style.background = on ? 'rgba(245,200,66,.35)' : '#2a2a30';
+  thumb.style.background  = on ? '#f5c842' : '#555';
+  thumb.style.left        = on ? '21px' : '3px';
+  document.getElementById('zip-name-row').style.display = on ? '' : 'none';
+  var btn = document.getElementById('batch-go');
+  btn.innerHTML = on
+    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f0f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Process All &amp; Save ZIP'
+    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f0f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Process All &amp; Download';
+}
+
+// Wire the visual toggle track as a click target
+document.addEventListener('DOMContentLoaded', function(){
+  var track = document.getElementById('zip-toggle-track');
+  if (track) {
+    track.style.cursor = 'pointer';
+    track.addEventListener('click', function(){
+      var cb = document.getElementById('zip-toggle');
+      cb.checked = !cb.checked;
+      updateZipToggle();
+    });
+  }
+});
+
+async function runBatch(){
+  if (!B.files.length || B.running) return;
+  B.running = true;
+  var btn = document.getElementById('batch-go');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg> Processing…';
+
+  var resizeMode = document.querySelector('input[name="batchResize"]:checked').value;
+  var quality = parseInt(document.getElementById('batch-q').value) / 100;
+  var mime = B.fmt==='jpg' ? 'image/jpeg' : B.fmt==='png' ? 'image/png' : B.fmt==='gif' ? 'image/gif' : 'image/webp';
+  var q = (B.fmt==='png'||B.fmt==='gif') ? undefined : quality;
+  var done=0, errors=0;
+
+  for (var i=0; i<B.files.length; i++){
+    var item = B.files[i];
+    item.status = 'processing';
+    updateBatchRow(item, i);
+    document.getElementById('batch-progress-fill').style.width = ((i/B.files.length)*100)+'%';
+
+    await new Promise(function(resolve){
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        var img = new Image();
+        img.onload = function(){
+          try {
+            var sw = img.width, sh = img.height;
+            if (resizeMode==='width'){
+              var mw = parseInt(document.getElementById('batch-max-w').value)||img.width;
+              if (img.width > mw){ sw=mw; sh=Math.round(mw*(img.height/img.width)); }
+            } else if (resizeMode==='exact'){
+              sw = parseInt(document.getElementById('batch-ex-w').value)||img.width;
+              sh = parseInt(document.getElementById('batch-ex-h').value)||img.height;
+            } else if (resizeMode==='pct'){
+              var pct = (parseInt(document.getElementById('batch-pct').value)||100)/100;
+              sw = Math.round(img.width*pct); sh = Math.round(img.height*pct);
+            }
+            BATCH_CANVAS.width=sw; BATCH_CANVAS.height=sh;
+            var ctx=BATCH_CANVAS.getContext('2d');
+            ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+            ctx.drawImage(img,0,0,sw,sh);
+            var dataUrl=BATCH_CANVAS.toDataURL(mime,q);
+            if (B.fmt==='png') dataUrl=embedPngDpi(dataUrl,B.dpi);
+            else if (B.fmt==='jpg') dataUrl=embedJpegDpi(dataUrl,B.dpi);
+            var byteLen=Math.round(dataUrl.split(',')[1].length*0.75);
+            item.outSize=byteLen; item.status='done';
+            item.dataUrl=dataUrl; item.w=sw; item.h=sh;
+            done++;
+          } catch(e){ item.status='error'; errors++; }
+          updateBatchRow(item, i);
+          resolve();
+        };
+        img.onerror=function(){ item.status='error'; errors++; updateBatchRow(item,i); resolve(); };
+        img.src=ev.target.result;
+      };
+      reader.onerror=function(){ item.status='error'; errors++; updateBatchRow(item,i); resolve(); };
+      reader.readAsDataURL(item.file);
+    });
+    await new Promise(function(r){ setTimeout(r,20); });
+  }
+
+  document.getElementById('batch-progress-fill').style.width='100%';
+
+  var useZip = document.getElementById('zip-toggle').checked;
+
+  if (useZip) {
+    // ── ZIP download ──
+    var btn2 = document.getElementById('batch-go');
+    btn2.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Building ZIP…';
+    var zip = new JSZip();
+    for (var j=0; j<B.files.length; j++){
+      var f2 = B.files[j];
+      if (f2.status==='done' && f2.dataUrl){
+        var fname = batchFileName(f2,j,f2.w,f2.h);
+        var b64data = f2.dataUrl.split(',')[1];
+        zip.file(fname, b64data, {base64:true});
+      }
+    }
+    var zipName = (document.getElementById('zip-name').value.trim() || 'batch-export') + '.zip';
+    zip.generateAsync({type:'blob', compression:'DEFLATE', compressionOptions:{level:6}},
+      function update(meta){
+        document.getElementById('batch-progress-fill').style.width = meta.percent.toFixed(0)+'%';
+      }
+    ).then(function(blob){
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = zipName;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
+      var sumEl = document.getElementById('batch-summary');
+      sumEl.querySelector('span').textContent = done + ' files zipped into ' + zipName + (errors ? ' · '+errors+' failed':'') + ' · ' + B.fmt.toUpperCase() + ' · ' + B.dpi + ' dpi';
+      sumEl.style.display='flex';
+      document.getElementById('batch-go').disabled=false;
+      document.getElementById('batch-go').innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f0f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Process All &amp; Download';
+      B.running=false;
+    });
+    return; // exit early — summary/reset handled in .then()
+  } else {
+    // ── Individual file downloads ──
+    for (var j=0; j<B.files.length; j++){
+      var f2 = B.files[j];
+      if (f2.status==='done' && f2.dataUrl){
+        await new Promise(function(r){ setTimeout(r, j*100); });
+        var a=document.createElement('a');
+        a.href=f2.dataUrl;
+        a.download=batchFileName(f2,j,f2.w,f2.h);
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+    }
+  }
+
+  var sumEl = document.getElementById('batch-summary');
+  sumEl.querySelector('span').textContent = done + ' exported' + (errors ? ', '+errors+' failed' : '') + ' · ' + B.fmt.toUpperCase() + ' · ' + B.dpi + ' dpi';
+  sumEl.style.display='flex';
+
+  btn.disabled=false;
+  btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f0f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Process All &amp; Download';
+  B.running=false;
+}
+
+function updateBatchRow(item, idx){
+  var row = document.getElementById('brow-'+item.id);
+  if (!row) { renderBatchGrid(); return; }
+  row.className = 'brow ' + item.status;
+  var meta = row.querySelector('.brow-meta');
+  if (meta) meta.textContent = fb(item.file.size) + (item.outSize ? ' → '+fb(item.outSize) : '');
+  var statusEl = row.querySelector('.brow-status');
+  if (statusEl){
+    statusEl.className = 'brow-status '+item.status;
+    if (item.status==='done')       statusEl.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5cb85c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    if (item.status==='processing') statusEl.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f5c842" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/></svg>';
+    if (item.status==='error')      statusEl.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e05252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>';
+  }
+}
+
+// Update showTab to include batch
+var _origShowTab = showTab;
+showTab = function(id) {
+  ['opt','shuf','batch'].forEach(function(t) {
+    var page = document.getElementById('page-'+t);
+    var btn  = document.getElementById('tab-'+t+'-btn');
+    if (page) page.classList.toggle('active', t===id);
+    if (btn)  btn.classList.toggle('active',  t===id);
+  });
+};
+</script>
+</body>
+</html>
